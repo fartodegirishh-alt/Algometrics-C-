@@ -21,14 +21,13 @@ import {
   getComplexityClassInfo,
   getPlainEnglishLineExplanation,
 } from './utils/complexityUtils';
-import { Code2 } from 'lucide-react';
 
 export default function App() {
   // Theme state: defaults to off-white/light mode as requested
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
-  // Navigation & Modal State (Benchmark Curves tab removed)
-  const [activeTab, setActiveTab] = useState<'visualizer' | 'complexity' | 'cpp'>('visualizer');
+  // Navigation & Modal State
+  const [activeTab, setActiveTab] = useState<'visualizer' | 'complexity'>('visualizer');
   const [showExportModal, setShowExportModal] = useState<boolean>(false);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
 
@@ -269,16 +268,6 @@ export default function App() {
             >
               Line Complexity
             </button>
-            <button
-              onClick={() => setActiveTab('cpp')}
-              className={`px-3 py-1.5 rounded transition-colors whitespace-nowrap cursor-pointer ${
-                activeTab === 'cpp'
-                  ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-semibold shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-              }`}
-            >
-              C++ Source
-            </button>
           </div>
         </div>
 
@@ -415,33 +404,6 @@ export default function App() {
               setSelectedLine={setSelectedLine}
               arraySize={arraySize}
             />
-          </div>
-        )}
-
-        {activeTab === 'cpp' && (
-          <div className="p-6 bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col gap-4 transition-colors">
-            <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
-              <div className="flex items-center gap-2">
-                <Code2 className="w-5 h-5 text-sky-600 dark:text-sky-400" />
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                  Instrumented C++ Implementation &amp; Benchmarking Framework
-                </h3>
-              </div>
-              <button
-                onClick={() => setShowExportModal(true)}
-                className="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white dark:bg-sky-400 dark:hover:bg-sky-300 dark:text-slate-950 font-semibold text-xs rounded-lg transition-colors cursor-pointer"
-              >
-                Open Fullscreen / Download
-              </button>
-            </div>
-
-            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-              This complete C++ program uses the custom <code className="text-teal-700 dark:text-teal-300 font-semibold">InstrumentedInt</code> class to automatically count every comparison (<code className="text-amber-600 dark:text-amber-300">&lt;</code>, <code className="text-amber-600 dark:text-amber-300">&gt;</code>, <code className="text-amber-600 dark:text-amber-300">==</code>) and assignment (<code className="text-emerald-600 dark:text-emerald-300">=</code>, <code className="text-emerald-600 dark:text-emerald-300">std::swap</code>) at runtime, reproducing the exact metrics shown in the visualizer.
-            </p>
-
-            <div className="p-4 bg-slate-950 rounded-lg border border-slate-800 font-mono text-xs text-slate-200 overflow-x-auto whitespace-pre max-h-[500px]">
-              {algorithm.getStandaloneCpp(arraySize, distribution)}
-            </div>
           </div>
         )}
       </main>

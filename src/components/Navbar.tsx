@@ -3,8 +3,8 @@ import { Code2, Play, Calculator, Download, Volume2, VolumeX, Sun, Moon } from '
 import { soundEngine } from '../utils/soundEngine';
 
 interface NavbarProps {
-  activeTab: 'visualizer' | 'complexity' | 'cpp';
-  setActiveTab: (tab: 'visualizer' | 'complexity' | 'cpp') => void;
+  activeTab: 'visualizer' | 'complexity';
+  setActiveTab: (tab: 'visualizer' | 'complexity') => void;
   onExportCpp: () => void;
   soundEnabled: boolean;
   setSoundEnabled: (v: boolean) => void;
@@ -33,7 +33,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         </span>
       </div>
 
-      {/* Zone 2: 3 single-line text navigation links (Benchmark curves tab removed) */}
+      {/* Zone 2: Single-line text navigation links */}
       <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600 dark:text-slate-400">
         <button
           onClick={() => setActiveTab('visualizer')}
@@ -57,18 +57,6 @@ export const Navbar: React.FC<NavbarProps> = ({
         >
           <Calculator className="w-3.5 h-3.5" />
           <span>Line Complexity Analysis</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('cpp')}
-          className={`flex items-center gap-2 py-1 transition-colors whitespace-nowrap shrink-0 border-b-2 ${
-            activeTab === 'cpp'
-              ? 'text-sky-600 dark:text-sky-400 border-sky-600 dark:border-sky-400 font-semibold'
-              : 'border-transparent hover:text-slate-900 dark:hover:text-slate-200'
-          }`}
-        >
-          <Code2 className="w-3.5 h-3.5" />
-          <span>C++ Source &amp; Harness</span>
         </button>
       </nav>
 

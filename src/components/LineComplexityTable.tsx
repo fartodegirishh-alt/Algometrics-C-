@@ -130,22 +130,22 @@ export const LineComplexityTable: React.FC<LineComplexityTableProps> = ({
           <div className="p-4 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col gap-2">
             <div className="flex items-center gap-2 text-xs font-bold text-amber-600 dark:text-amber-400">
               <span className="w-5 h-5 rounded-full bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center text-[11px] font-bold">2</span>
-              <span>Sum Total Operations</span>
+              <span>Identify Dominant Operations</span>
             </div>
             <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-              We add together the execution count of all lines into a total workload:
+              We look at which operations execute most frequently:
             </p>
             <div className="p-2.5 rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 font-mono text-xs flex flex-col gap-1">
               <div className="flex justify-between text-slate-800 dark:text-slate-300">
-                <span>Observed Total:</span>
-                <strong className="text-slate-950 dark:text-white font-bold">{totalCalculatedOps} cycles</strong>
+                <span>Comparisons (C):</span>
+                <strong className="text-slate-950 dark:text-white font-bold">{currentStep?.comparisons ?? 0}</strong>
               </div>
               <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                Comps ({currentStep?.comparisons ?? 0}) + Assigns ({currentStep?.assignments ?? 0})
+                Core comparisons executed inside nested loops
               </div>
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal">
-              Notice that the nested loop lines make up over <strong>80%</strong> of the total work!
+              Notice that the nested loop lines make up the vast majority of all executions!
             </p>
           </div>
 
@@ -227,14 +227,14 @@ export const LineComplexityTable: React.FC<LineComplexityTableProps> = ({
             </div>
 
             <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-              <span>Cost per run:</span>
-              <span className="font-mono text-slate-800 dark:text-slate-200">{inspectedLineDef.baseCost} cycle(s)</span>
+              <span>Theoretical Formula:</span>
+              <span className="font-mono text-amber-600 dark:text-amber-300 font-medium">{inspectedLineDef.theoreticalFrequency}</span>
             </div>
 
             <div className="pt-2 mt-auto border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
-              <span className="text-slate-500 dark:text-slate-400">Total Work on Line:</span>
+              <span className="text-slate-500 dark:text-slate-400">Observed Executions:</span>
               <span className="font-mono font-bold text-sky-600 dark:text-sky-400 tabular-nums">
-                {(lineHits[inspectedLineDef.lineNumber] || 0) * inspectedLineDef.baseCost} cycles
+                {lineHits[inspectedLineDef.lineNumber] || 0} times
               </span>
             </div>
           </div>
@@ -261,16 +261,15 @@ export const LineComplexityTable: React.FC<LineComplexityTableProps> = ({
               <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-slate-600 dark:text-slate-400 font-mono text-[11px]">
                 <th className="py-2.5 px-3 w-12 text-center">Line</th>
                 <th className="py-2.5 px-3">C++ Code Statement</th>
-                <th className="py-2.5 px-3 w-36">Frequency Class</th>
+                <th className="py-2.5 px-3 w-32">Frequency Class</th>
+                <th className="py-2.5 px-3 w-36">Theoretical f(n)</th>
                 <th className="py-2.5 px-3 w-28 text-right">Hits (N={arraySize})</th>
                 <th className="py-2.5 px-3 w-28">Type</th>
-                <th className="py-2.5 px-3 w-24 text-right">Work</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-900/80 font-mono">
               {algorithm.lines.map((line) => {
                 const hits = lineHits[line.lineNumber] || 0;
-                const subtotal = hits * line.baseCost;
                 const isSelected = line.lineNumber === activeInspectLineNumber;
                 const cls = inferLineComplexityClass(line, algorithm);
                 const clsInfo = getComplexityClassInfo(cls);
@@ -296,29 +295,19 @@ export const LineComplexityTable: React.FC<LineComplexityTableProps> = ({
                         {clsInfo.label.split(' ')[0]}
                       </span>
                     </td>
+                    <td className="py-2 px-3 text-amber-600 dark:text-amber-300 text-[11px]">
+                      {line.theoreticalFrequency}
+                    </td>
                     <td className="py-2 px-3 text-right text-sky-600 dark:text-sky-300 font-semibold tabular-nums">
                       {hits}×
                     </td>
                     <td className="py-2 px-3 text-slate-500 dark:text-slate-400 capitalize text-[11px]">
                       {line.operationType.replace('_', ' ')}
                     </td>
-                    <td className="py-2 px-3 text-right font-semibold text-slate-800 dark:text-slate-200 tabular-nums">
-                      {subtotal}
-                    </td>
                   </tr>
                 );
               })}
             </tbody>
-            <tfoot>
-              <tr className="border-t-2 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 font-mono text-xs">
-                <td colSpan={3} className="py-2.5 px-3 font-sans font-bold text-slate-900 dark:text-slate-200">
-                  Total Operations Calculated:
-                </td>
-                <td colSpan={3} className="py-2.5 px-3 text-right font-bold text-sky-600 dark:text-sky-400 text-sm tabular-nums">
-                  {totalCalculatedOps.toLocaleString()} instruction cycles
-                </td>
-              </tr>
-            </tfoot>
           </table>
         </div>
       </div>
