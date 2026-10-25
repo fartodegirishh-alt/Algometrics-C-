@@ -1,0 +1,6 @@
+{
+  "name": "C++ Algorithm Complexity & Cost Studio",
+  "description": "Interactive C++ searching and sorting laboratory that visualizes line-by-line time complexity calculations, tracks empirical comparisons and assignments, and validates observed metrics against theoretical asymptotic bounds.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
