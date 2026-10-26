@@ -6,159 +6,194 @@ import {
   StepState,
 } from '../types/algorithm';
 import { generateArray } from '../utils/arrayUtils';
-import { generateStandaloneCpp } from './cppGenerators';
 
-const cppCode = `int binarySearch(const std::vector<InstrumentedInt>& arr, const InstrumentedInt& target) {
+const cppCode = `int binarySearch(int a[], int n, int key)
+{
     int low = 0;
-    int high = arr.size() - 1;
-    while (low <= high) {
-        int mid = low + (high - low) / 2;
-        if (arr[mid] == target) {
+    int high = n - 1;
+
+    while (low <= high)
+    {
+        int mid = (low + high) / 2;
+
+        if (a[mid] == key)
             return mid;
-        } else if (arr[mid] < target) {
+
+        else if (a[mid] < key)
             low = mid + 1;
-        } else {
+
+        else
             high = mid - 1;
-        }
     }
+
     return -1;
 }`;
 
 const lines: LineCostDefinition[] = [
   {
     lineNumber: 1,
-    code: 'int binarySearch(const std::vector<InstrumentedInt>& arr, const InstrumentedInt& target) {',
+    code: 'int binarySearch(int a[], int n, int key)',
     costLabel: 'c1',
     theoreticalFrequency: '1',
-    frequencyExplanation: 'Function entry.',
+    frequencyExplanation: 'Function signature and entry invocation.',
     operationType: 'declaration',
     baseCost: 1,
+    complexityClass: 'O(1)',
   },
   {
     lineNumber: 2,
-    code: '    int low = 0;',
+    code: '{',
     costLabel: 'c2',
     theoreticalFrequency: '1',
-    frequencyExplanation: 'Initialize lower search boundary.',
-    operationType: 'assignment',
-    baseCost: 1,
+    frequencyExplanation: 'Function block opening.',
+    operationType: 'none',
+    baseCost: 0,
+    complexityClass: 'O(1)',
   },
   {
     lineNumber: 3,
-    code: '    int high = arr.size() - 1;',
+    code: '    int low = 0;',
     costLabel: 'c3',
     theoreticalFrequency: '1',
-    frequencyExplanation: 'Initialize upper search boundary.',
+    frequencyExplanation: 'Initializes lower bound of search window to index 0.',
     operationType: 'assignment',
     baseCost: 1,
+    complexityClass: 'O(1)',
   },
   {
     lineNumber: 4,
-    code: '    while (low <= high) {',
+    code: '    int high = n - 1;',
     costLabel: 'c4',
-    theoreticalFrequency: '1 to ⌊log₂ n⌋ + 2',
-    frequencyExplanation: 'Loop condition: checks whether search interval is non-empty.',
-    operationType: 'loop_control',
+    theoreticalFrequency: '1',
+    frequencyExplanation: 'Initializes upper bound of search window to index n - 1.',
+    operationType: 'assignment',
     baseCost: 1,
+    complexityClass: 'O(1)',
   },
   {
     lineNumber: 5,
-    code: '        int mid = low + (high - low) / 2;',
+    code: '    while (low <= high)',
     costLabel: 'c5',
-    theoreticalFrequency: '1 to ⌊log₂ n⌋ + 1',
-    frequencyExplanation: 'Overflow-safe midpoint calculation (divides search window in half).',
-    operationType: 'assignment',
+    theoreticalFrequency: 'log₂ n + 1',
+    frequencyExplanation: 'While loop interval validity check. Halves search interval on each iteration.',
+    operationType: 'loop_control',
     baseCost: 1,
+    complexityClass: 'O(log N)',
+    simpleExplanation: 'Continues while search interval contains at least one item.',
   },
   {
     lineNumber: 6,
-    code: '        if (arr[mid] == target) {',
+    code: '    {',
     costLabel: 'c6',
-    theoreticalFrequency: '1 to ⌊log₂ n⌋ + 1',
-    frequencyExplanation: 'Primary Equality Comparison: 1 if target is at mid on first check (Ω(1) best case).',
-    operationType: 'comparison',
-    baseCost: 1,
+    theoreticalFrequency: 'log₂ n',
+    frequencyExplanation: 'Loop block start.',
+    operationType: 'none',
+    baseCost: 0,
+    complexityClass: 'O(log N)',
   },
   {
     lineNumber: 7,
-    code: '            return mid;',
+    code: '        int mid = (low + high) / 2;',
     costLabel: 'c7',
-    theoreticalFrequency: '0 or 1',
-    frequencyExplanation: 'Return mid index upon successful match.',
-    operationType: 'return',
+    theoreticalFrequency: 'log₂ n',
+    frequencyExplanation: 'Computes median index of the remaining search window.',
+    operationType: 'assignment',
     baseCost: 1,
+    complexityClass: 'O(log N)',
+    simpleExplanation: 'Picks the middle index of the current range.',
   },
   {
     lineNumber: 8,
-    code: '        } else if (arr[mid] < target) {',
+    code: '        if (a[mid] == key)',
     costLabel: 'c8',
-    theoreticalFrequency: '1 to ⌊log₂ n⌋ + 1',
-    frequencyExplanation: 'Order Comparison: determines whether target lies in right or left half.',
+    theoreticalFrequency: 'log₂ n',
+    frequencyExplanation: 'Primary equality check: checks if midpoint contains search key.',
     operationType: 'comparison',
     baseCost: 1,
+    complexityClass: 'O(log N)',
+    simpleExplanation: 'Checks if middle element matches key.',
   },
   {
     lineNumber: 9,
-    code: '            low = mid + 1;',
+    code: '            return mid;',
     costLabel: 'c9',
-    theoreticalFrequency: 'Branch taken',
-    frequencyExplanation: 'Discard left half: search interval becomes [mid + 1, high].',
-    operationType: 'assignment',
+    theoreticalFrequency: '0 or 1',
+    frequencyExplanation: 'Returns matched index immediately.',
+    operationType: 'return',
     baseCost: 1,
+    complexityClass: 'O(1)',
+    simpleExplanation: 'Target found at midpoint, return index.',
   },
   {
     lineNumber: 10,
-    code: '        } else {',
+    code: '        else if (a[mid] < key)',
     costLabel: 'c10',
-    theoreticalFrequency: '-',
-    frequencyExplanation: 'Else branch.',
-    operationType: 'none',
-    baseCost: 0,
+    theoreticalFrequency: 'log₂ n',
+    frequencyExplanation: 'Directional comparison: checks if target is in upper or lower half.',
+    operationType: 'comparison',
+    baseCost: 1,
+    complexityClass: 'O(log N)',
+    simpleExplanation: 'Checks if key is to the right of mid.',
   },
   {
     lineNumber: 11,
-    code: '            high = mid - 1;',
+    code: '            low = mid + 1;',
     costLabel: 'c11',
-    theoreticalFrequency: 'Branch taken',
-    frequencyExplanation: 'Discard right half: search interval becomes [low, mid - 1].',
+    theoreticalFrequency: 'k_1 · log₂ n',
+    frequencyExplanation: 'Discards left half; shifts lower bound rightward.',
     operationType: 'assignment',
     baseCost: 1,
+    complexityClass: 'O(log N)',
   },
   {
     lineNumber: 12,
-    code: '        }',
+    code: '        else',
     costLabel: 'c12',
-    theoreticalFrequency: '-',
-    frequencyExplanation: 'End if-else.',
+    theoreticalFrequency: 'log₂ n',
+    frequencyExplanation: 'Alternative branch when a[mid] > key.',
     operationType: 'none',
     baseCost: 0,
+    complexityClass: 'O(log N)',
   },
   {
     lineNumber: 13,
-    code: '    }',
+    code: '            high = mid - 1;',
     costLabel: 'c13',
-    theoreticalFrequency: '-',
-    frequencyExplanation: 'End while loop.',
-    operationType: 'none',
-    baseCost: 0,
+    theoreticalFrequency: 'k_2 · log₂ n',
+    frequencyExplanation: 'Discards right half; shifts upper bound leftward.',
+    operationType: 'assignment',
+    baseCost: 1,
+    complexityClass: 'O(log N)',
   },
   {
     lineNumber: 14,
-    code: '    return -1;',
+    code: '    }',
     costLabel: 'c14',
-    theoreticalFrequency: '0 or 1',
-    frequencyExplanation: 'Returns -1 when search space is exhausted without finding target.',
-    operationType: 'return',
-    baseCost: 1,
+    theoreticalFrequency: 'log₂ n',
+    frequencyExplanation: 'End of while loop.',
+    operationType: 'none',
+    baseCost: 0,
+    complexityClass: 'O(log N)',
   },
   {
     lineNumber: 15,
-    code: '}',
+    code: '    return -1;',
     costLabel: 'c15',
-    theoreticalFrequency: '1',
-    frequencyExplanation: 'End binarySearch.',
+    theoreticalFrequency: '0 or 1',
+    frequencyExplanation: 'Returned if window collapsed without finding the key.',
     operationType: 'return',
     baseCost: 1,
+    complexityClass: 'O(1)',
+  },
+  {
+    lineNumber: 16,
+    code: '}',
+    costLabel: 'c16',
+    theoreticalFrequency: '1',
+    frequencyExplanation: 'Function return.',
+    operationType: 'return',
+    baseCost: 1,
+    complexityClass: 'O(1)',
   },
 ];
 
@@ -166,8 +201,8 @@ export const binarySearchDefinition: AlgorithmDefinition = {
   id: 'binary-search',
   name: 'Binary Search',
   category: 'searching',
-  shortDescription: 'Searches sorted array by repeatedly halving the search interval in logarithmic time.',
-  fullDescription: 'Binary Search requires a sorted sequence. At each iteration, it compares the target value to the middle element. If they differ, the half in which the target cannot lie is eliminated, reducing the search space from n to n/2 to n/4 ... to 1, guaranteeing at most ⌊log₂ n⌋ + 1 iterations.',
+  shortDescription: 'Finds key position in a sorted array by repeatedly dividing search interval in half.',
+  fullDescription: 'Binary Search requires the array to be sorted. On each step, it compares the target with the middle element, eliminating half of the remaining array elements and achieving O(log n) time.',
   requiresSorted: true,
   cppCode,
   lines,
@@ -178,53 +213,49 @@ export const binarySearchDefinition: AlgorithmDefinition = {
     spaceComplexity: 'O(1)',
     comparisonsFormula: {
       best: '1',
-      worst: '2(⌊log₂ n⌋ + 1)',
-      average: '2 log₂ n - 1',
+      worst: '2 ⌊log₂ n⌋ + 2',
+      average: '2 ⌊log₂ n⌋',
       calculate: (n: number) => {
-        const log2n = Math.floor(Math.log2(n));
-        return {
-          best: 1,
-          worst: 2 * (log2n + 1),
-          avg: Math.round(2 * log2n - 1),
-        };
+        const log2n = Math.floor(Math.log2(n || 1));
+        return { best: 1, worst: 2 * log2n + 2, avg: 2 * log2n + 1 };
       },
     },
     assignmentsFormula: {
       best: '3',
-      worst: 'log₂ n + 4',
-      average: 'log₂ n + 3',
+      worst: 'log₂ n + 2',
+      average: 'log₂ n + 2',
       calculate: (n: number) => {
-        const log2n = Math.ceil(Math.log2(n));
-        return {
-          best: 3,
-          worst: log2n + 4,
-          avg: log2n + 3,
-        };
+        const log2n = Math.floor(Math.log2(n || 1));
+        return { best: 3, worst: log2n + 2, avg: log2n + 2 };
       },
     },
   },
   derivations: [
     {
-      title: '1. Interval Halving Recurrence',
-      formula: 'T(n) = T(n / 2) + c, \\quad T(1) = \\Theta(1)',
-      explanation: 'At every step, one comparison reduces the problem size from n to n/2, producing a linear recurrence in the exponent.',
+      title: '1. Search Space Reduction Relation',
+      formula: 'N_k = \\frac{n}{2^k} \\ge 1 \\implies 2^k \\le n \\implies k \\le \\log_2 n',
+      explanation: 'Since the search space is divided by 2 on every iteration, at most ⌊log₂ n⌋ + 1 iterations can occur before window collapses.',
     },
     {
-      title: '2. Closed-Form Iteration Bound',
-      formula: '\\frac{n}{2^k} = 1 \\implies 2^k = n \\implies k = \\log_2 n \\implies \\text{Max Steps} = \\lfloor \\log_2 n \\rfloor + 1',
-      explanation: 'The search range reaches size 1 after at most log2(n) subdivisions, bounding comparisons by 2 * (floor(log2 n) + 1).',
-    },
-    {
-      title: '3. Asymptotic Bound',
-      formula: 'T(n) = \\mathcal{O}(\\log n)',
-      explanation: 'Logarithmic growth means searching 1,000,000 items requires at most 20 iterations!',
+      title: '2. Total Comparisons Closed Form',
+      formula: 'C(n) \\le 2 \\lfloor \\log_2 n \\rfloor + 2 = \\mathcal{O}(\\log n)',
+      explanation: 'At most two comparisons per iteration (equality check and directional inequality), leading to strict logarithmic time.',
     },
   ],
-  generateSteps: (initialArray: number[], targetVal?: number): StepState[] => {
+  intuitiveGuide: {
+    shape: 'halving',
+    plainEnglishSummary: 'Like searching for a word in a dictionary: open to the middle, see if the target is before or after, and discard the other half.',
+    scalingRule: 'If you double the array size from 1000 to 2000, it takes only 1 extra step!',
+    threeStepBreakdown: {
+      step1Loops: 'Look at the midpoint mid = (low + high) / 2.',
+      step2Counts: 'If too high, search left. If too low, search right. Search space cuts in half every time.',
+      step3BigO: 'Takes at most log₂(n) steps, giving O(log n).',
+    },
+  },
+  generateSteps: (initialArray: number[], targetVal: number = 45): StepState[] => {
     const steps: StepState[] = [];
-    const arr = [...initialArray].sort((a, b) => a - b);
-    const n = arr.length;
-    const target = targetVal !== undefined ? targetVal : arr[Math.floor(n * 0.7)] ?? arr[0];
+    const a = [...initialArray].sort((x, y) => x - y);
+    const n = a.length;
     let comparisons = 0;
     let assignments = 0;
     const lineHits: { [line: number]: number } = {};
@@ -237,148 +268,167 @@ export const binarySearchDefinition: AlgorithmDefinition = {
       sorted: number[],
       msg: string,
       expr?: string,
-      result?: string
+      res?: string
     ) => {
       lineHits[line] = (lineHits[line] || 0) + 1;
       steps.push({
         stepIndex: steps.length,
         lineNumber: line,
-        array: [...arr],
-        indices: { ...indices },
-        comparingIndices: [...comparing],
-        swappingIndices: [...swapping],
-        sortedIndices: [...sorted],
+        array: [...a],
+        indices,
+        comparingIndices: comparing,
+        swappingIndices: swapping,
+        sortedIndices: sorted,
         comparisons,
         assignments,
         lineHits: { ...lineHits },
         message: msg,
         highlightExpression: expr,
-        expressionResult: result,
+        expressionResult: res,
       });
     };
 
-    record(1, { target }, [], [], [], `binarySearch(arr, target=${target}) started on sorted array`);
+    record(1, { key: targetVal }, [], [], [], `Starting binarySearch(a, n = ${n}, key = ${targetVal})`);
 
     let low = 0;
-    assignments += 1;
-    record(2, { low, target }, [], [], [], `low = 0`);
-
     let high = n - 1;
-    assignments += 1;
-    record(3, { low, high, target }, [], [], [], `high = arr.size() - 1 [high = ${high}]`);
+    assignments += 2;
+    record(3, { low, high, key: targetVal }, [], [], [], `low = 0`);
+    record(4, { low, high, key: targetVal }, [], [], [], `high = n - 1 = ${high}`);
 
-    let foundIdx = -1;
+    let found = false;
 
     while (low <= high) {
-      record(4, { low, high, target }, [], [], [], `Search interval: [${low} .. ${high}] (size: ${high - low + 1})`);
+      record(5, { low, high, key: targetVal }, [], [], [], `while (low <= high): window is [${low}, ${high}]`);
 
-      const mid = low + Math.floor((high - low) / 2);
-      assignments += 1;
-      record(5, { low, high, mid, target }, [], [], [], `Calculated midpoint: mid = ${mid} (value: ${arr[mid]})`);
+      const mid = Math.floor((low + high) / 2);
+      assignments++;
+      record(7, { low, high, mid, key: targetVal }, [mid], [], [], `mid = (low + high) / 2 = ${mid} (value: ${a[mid]})`);
 
-      comparisons += 1;
-      const isMatch = arr[mid] === target;
-      record(
-        6,
-        { low, high, mid, target },
-        [mid],
-        [],
-        isMatch ? [mid] : [],
-        `Checking if arr[mid (${mid})] (${arr[mid]}) == target (${target}) -> ${isMatch ? 'MATCH FOUND!' : 'No match'}`,
-        `arr[${mid}] == ${target}`,
-        `${arr[mid]} == ${target} -> ${isMatch}`
-      );
+      comparisons++;
+      const cmpEqExpr = `a[${mid}] == key`;
+      const isEq = a[mid] === targetVal;
+      const cmpEqRes = `${a[mid]} == ${targetVal} -> ${isEq}`;
 
-      if (isMatch) {
-        foundIdx = mid;
-        record(7, { low, high, mid, target }, [], [], [mid], `Target found at mid index ${mid}! Returning ${mid}`);
+      record(8, { low, high, mid, key: targetVal }, [mid], [], [], `Checking if a[mid] == key (${a[mid]} == ${targetVal})`, cmpEqExpr, cmpEqRes);
+
+      if (isEq) {
+        found = true;
+        record(9, { low, high, mid, key: targetVal }, [mid], [], [mid], `Match found! Returning index ${mid}`, cmpEqExpr, cmpEqRes);
         break;
       }
 
-      comparisons += 1;
-      const isSmaller = arr[mid] < target;
-      record(
-        8,
-        { low, high, mid, target },
-        [mid],
-        [],
-        [],
-        `Checking if arr[mid (${mid})] (${arr[mid]}) < target (${target}) -> ${isSmaller ? 'Target in right half' : 'Target in left half'}`,
-        `arr[${mid}] < ${target}`,
-        `${arr[mid]} < ${target} -> ${isSmaller}`
-      );
+      comparisons++;
+      const cmpLtExpr = `a[${mid}] < key`;
+      const isLt = a[mid] < targetVal;
+      const cmpLtRes = `${a[mid]} < ${targetVal} -> ${isLt}`;
 
-      if (isSmaller) {
+      record(10, { low, high, mid, key: targetVal }, [mid], [], [], `else if (a[mid] < key): checking ${a[mid]} < ${targetVal}`, cmpLtExpr, cmpLtRes);
+
+      if (isLt) {
         low = mid + 1;
-        assignments += 1;
-        record(9, { low, high, mid, target }, [], [], [], `Discarded left half: new low = ${low}`);
+        assignments++;
+        record(11, { low, high, mid, key: targetVal }, [], [], [], `Target is in right half: low = mid + 1 (${low})`);
       } else {
         high = mid - 1;
-        assignments += 1;
-        record(11, { low, high, mid, target }, [], [], [], `Discarded right half: new high = ${high}`);
+        assignments++;
+        record(13, { low, high, mid, key: targetVal }, [], [], [], `Target is in left half: high = mid - 1 (${high})`);
       }
     }
 
-    if (foundIdx === -1) {
-      record(14, { target }, [], [], [], `Target ${target} absent from array. Returning -1`);
+    if (!found) {
+      record(15, { low, high, key: targetVal }, [], [], [], `Search window collapsed (low > high). Returning -1`);
     }
 
     return steps;
   },
-
-  runBenchmark: (sizes: number[], _dist: InputDistribution, targetVal?: number): BenchmarkPoint[] => {
+  runBenchmark: (sizes: number[], distribution: InputDistribution, targetVal: number = 45): BenchmarkPoint[] => {
     return sizes.map((n) => {
-      // Must use sorted array for binary search
-      const arr = generateArray(n, 'sorted');
-      const target = targetVal !== undefined ? targetVal : arr[Math.floor(n * 0.8)] ?? 999;
+      const arr = generateArray(n, distribution).sort((x, y) => x - y);
       let comparisons = 0;
-      let assignments = 2; // low, high
-
+      let assignments = 2;
       let low = 0;
       let high = n - 1;
-
       while (low <= high) {
-        const mid = low + Math.floor((high - low) / 2);
+        const mid = Math.floor((low + high) / 2);
         assignments++;
         comparisons++;
-        if (arr[mid] === target) {
+        if (arr[mid] === targetVal) {
           break;
         }
         comparisons++;
-        if (arr[mid] < target) {
+        if (arr[mid] < targetVal) {
           low = mid + 1;
-          assignments++;
         } else {
           high = mid - 1;
-          assignments++;
         }
+        assignments++;
       }
-
-      const log2n = Math.ceil(Math.log2(n));
-      const theoreticalWorst = 2 * (log2n + 1);
-      const theoreticalBest = 1;
-      const theoreticalAvg = 2 * log2n - 1;
-
+      const log2n = Math.floor(Math.log2(n || 1));
       return {
         n,
         observedComparisons: comparisons,
         observedAssignments: assignments,
-        totalOperations: comparisons + assignments,
-        theoreticalWorst,
-        theoreticalAvg,
-        theoreticalBest,
+        totalOperations: comparisons,
+        theoreticalWorst: 2 * log2n + 2,
+        theoreticalAvg: 2 * log2n + 1,
+        theoreticalBest: 1,
       };
     });
   },
+  getStandaloneCpp: (arraySize: number, distribution: InputDistribution): string => {
+    const sampleArr = generateArray(arraySize, distribution).sort((x, y) => x - y);
+    const key = sampleArr[Math.floor(sampleArr.length / 2)] || 45;
+    return `#include <iostream>
+using namespace std;
 
-  getStandaloneCpp: (arraySize: number, distribution: InputDistribution) => {
-    return generateStandaloneCpp(
-      'Binary Search',
-      cppCode,
-      '// Binary search requires a sorted array\n        std::sort(arr.begin(), arr.end());\n        InstrumentedInt target = arr[arr.size() * 3 / 4];\n        int idx = binarySearch(arr, target);\n        std::cout << "Target found at index: " << idx << "\\n";',
-      true,
-      arraySize,
-      distribution
-    );
+int binarySearch(int a[], int n, int key)
+{
+    int low = 0;
+    int high = n - 1;
+
+    while (low <= high)
+    {
+        int mid = (low + high) / 2;
+
+        if (a[mid] == key)
+            return mid;
+
+        else if (a[mid] < key)
+            low = mid + 1;
+
+        else
+            high = mid - 1;
+    }
+
+    return -1;
+}
+
+int main()
+{
+    int a[50], n, key, result;
+
+    // Default sample input initialized for demonstration:
+    n = ${Math.min(arraySize, 50)};
+    int sampleData[] = {${sampleArr.slice(0, 50).join(', ')}};
+    for (int i = 0; i < n; i++) a[i] = sampleData[i];
+    key = ${key};
+
+    cout << "Sorted array elements: ";
+    for (int i = 0; i < n; i++)
+        cout << a[i] << " ";
+    cout << "\\n";
+
+    cout << "Element to search: " << key << "\\n";
+
+    result = binarySearch(a, n, key);
+
+    if (result == -1)
+        cout << "Element not found\\n";
+    else
+        cout << "Element found at position " << result + 1 << " (index " << result << ")\\n";
+
+    return 0;
+}`;
   },
 };

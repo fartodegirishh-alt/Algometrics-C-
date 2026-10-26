@@ -135,6 +135,8 @@ std::string handleRequest(const std::string& method, const std::string& path, co
                            "    {\"id\": \"bubble-sort\", \"name\": \"Bubble Sort\", \"category\": \"sorting\", \"complexity\": \"O(n²)\"},\n"
                            "    {\"id\": \"selection-sort\", \"name\": \"Selection Sort\", \"category\": \"sorting\", \"complexity\": \"O(n²)\"},\n"
                            "    {\"id\": \"insertion-sort\", \"name\": \"Insertion Sort\", \"category\": \"sorting\", \"complexity\": \"O(n²)\"},\n"
+                           "    {\"id\": \"merge-sort\", \"name\": \"Merge Sort\", \"category\": \"sorting\", \"complexity\": \"O(n log n)\"},\n"
+                           "    {\"id\": \"heap-sort\", \"name\": \"Heap Sort\", \"category\": \"sorting\", \"complexity\": \"O(n log n)\"},\n"
                            "    {\"id\": \"linear-search\", \"name\": \"Linear Search\", \"category\": \"searching\", \"complexity\": \"O(n)\"},\n"
                            "    {\"id\": \"binary-search\", \"name\": \"Binary Search\", \"category\": \"searching\", \"complexity\": \"O(log n)\"}\n"
                            "  ]\n"
@@ -160,6 +162,10 @@ std::string handleRequest(const std::string& method, const std::string& path, co
             res = runSelectionSort(arr);
         } else if (algoId == "insertion-sort") {
             res = runInsertionSort(arr);
+        } else if (algoId == "merge-sort") {
+            res = runMergeSort(arr);
+        } else if (algoId == "heap-sort") {
+            res = runHeapSort(arr);
         } else if (algoId == "linear-search") {
             res = runLinearSearch(arr, target);
         } else if (algoId == "binary-search") {

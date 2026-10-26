@@ -5,14 +5,11 @@
 #include <vector>
 #include <string>
 #include <sstream>
-#include <memory>
 #include <cmath>
 #include <algorithm>
-#include <chrono>
 
 namespace algometrics {
 
-// Tracker for operations performed during execution
 struct ExecutionMetrics {
     uint64_t comparisons = 0;
 
@@ -23,7 +20,6 @@ struct ExecutionMetrics {
 
 inline ExecutionMetrics g_metrics;
 
-// Instrumented Integer to track exact comparisons
 class InstrumentedInt {
 public:
     int value;
@@ -92,7 +88,7 @@ struct AlgorithmResult {
     std::vector<ExecutionStep> steps;
 };
 
-// 1. Bubble Sort
+// 1. Bubble Sort (User Code)
 inline AlgorithmResult runBubbleSort(std::vector<int> input) {
     g_metrics.reset();
     AlgorithmResult result;
@@ -100,10 +96,9 @@ inline AlgorithmResult runBubbleSort(std::vector<int> input) {
     result.algorithmName = "Bubble Sort";
     result.timeComplexity = "O(n²)";
 
-    std::vector<InstrumentedInt> arr;
-    for (int v : input) arr.emplace_back(v);
-
-    int n = static_cast<int>(arr.size());
+    std::vector<InstrumentedInt> a;
+    for (int v : input) a.emplace_back(v);
+    int n = static_cast<int>(a.size());
     int step = 0;
 
     auto recordStep = [&](int line, const std::string& code, const std::vector<int>& cmp, const std::vector<int>& swp, const std::string& desc) {
@@ -111,7 +106,7 @@ inline AlgorithmResult runBubbleSort(std::vector<int> input) {
         s.stepNumber = ++step;
         s.lineNumber = line;
         s.code = code;
-        for (const auto& item : arr) s.arrayState.push_back(item.value);
+        for (const auto& item : a) s.arrayState.push_back(item.value);
         s.comparingIndices = cmp;
         s.swappedIndices = swp;
         s.comparisonsSoFar = g_metrics.comparisons;
@@ -119,32 +114,31 @@ inline AlgorithmResult runBubbleSort(std::vector<int> input) {
         result.steps.push_back(s);
     };
 
-    recordStep(1, "int n = arr.size();", {}, {}, "Initialized array length n = " + std::to_string(n));
+    recordStep(1, "void bubbleSort(int a[], int n)", {}, {}, "Entering bubbleSort");
+    recordStep(3, "int temp;", {}, {}, "Declared temp");
 
-    for (int i = 0; i < n - 1; ++i) {
-        bool swapped = false;
-        recordStep(2, "for (int i = 0; i < n - 1; ++i)", {}, {}, "Starting outer pass i = " + std::to_string(i));
-
-        for (int j = 0; j < n - i - 1; ++j) {
-            recordStep(4, "if (arr[j] > arr[j + 1])", {j, j + 1}, {}, "Comparing arr[" + std::to_string(j) + "] and arr[" + std::to_string(j + 1) + "]");
-            if (arr[j] > arr[j + 1]) {
-                std::swap(arr[j], arr[j + 1]);
-                swapped = true;
-                recordStep(5, "std::swap(arr[j], arr[j + 1]);", {}, {j, j + 1}, "Swapped out-of-order elements at " + std::to_string(j) + " and " + std::to_string(j + 1));
+    for (int i = 0; i < n - 1; i++) {
+        recordStep(4, "for (int i = 0; i < n - 1; i++)", {}, {}, "Outer pass i = " + std::to_string(i));
+        for (int j = 0; j < n - i - 1; j++) {
+            recordStep(6, "for (int j = 0; j < n - i - 1; j++)", {}, {}, "Inner check j = " + std::to_string(j));
+            recordStep(8, "if (a[j] > a[j + 1])", {j, j + 1}, {}, "Comparing a[" + std::to_string(j) + "] and a[" + std::to_string(j + 1) + "]");
+            if (a[j] > a[j + 1]) {
+                InstrumentedInt temp = a[j];
+                recordStep(10, "temp = a[j];", {}, {j}, "Saved temp = " + std::to_string(temp.value));
+                a[j] = a[j + 1];
+                recordStep(11, "a[j] = a[j + 1];", {}, {j, j + 1}, "Shifted right element left");
+                a[j + 1] = temp;
+                recordStep(12, "a[j + 1] = temp;", {}, {j, j + 1}, "Completed swap");
             }
-        }
-        if (!swapped) {
-            recordStep(8, "if (!swapped) break;", {}, {}, "No swaps occurred in this pass; array is already sorted.");
-            break;
         }
     }
 
-    recordStep(10, "return arr;", {}, {}, "Bubble sort complete.");
+    recordStep(16, "}", {}, {}, "Bubble sort complete");
     result.totalComparisons = g_metrics.comparisons;
     return result;
 }
 
-// 2. Selection Sort
+// 2. Selection Sort (User Code)
 inline AlgorithmResult runSelectionSort(std::vector<int> input) {
     g_metrics.reset();
     AlgorithmResult result;
@@ -152,10 +146,9 @@ inline AlgorithmResult runSelectionSort(std::vector<int> input) {
     result.algorithmName = "Selection Sort";
     result.timeComplexity = "O(n²)";
 
-    std::vector<InstrumentedInt> arr;
-    for (int v : input) arr.emplace_back(v);
-
-    int n = static_cast<int>(arr.size());
+    std::vector<InstrumentedInt> a;
+    for (int v : input) a.emplace_back(v);
+    int n = static_cast<int>(a.size());
     int step = 0;
 
     auto recordStep = [&](int line, const std::string& code, const std::vector<int>& cmp, const std::vector<int>& swp, const std::string& desc) {
@@ -163,7 +156,7 @@ inline AlgorithmResult runSelectionSort(std::vector<int> input) {
         s.stepNumber = ++step;
         s.lineNumber = line;
         s.code = code;
-        for (const auto& item : arr) s.arrayState.push_back(item.value);
+        for (const auto& item : a) s.arrayState.push_back(item.value);
         s.comparingIndices = cmp;
         s.swappedIndices = swp;
         s.comparisonsSoFar = g_metrics.comparisons;
@@ -171,32 +164,37 @@ inline AlgorithmResult runSelectionSort(std::vector<int> input) {
         result.steps.push_back(s);
     };
 
-    recordStep(1, "int n = arr.size();", {}, {}, "Array size = " + std::to_string(n));
+    recordStep(1, "void selectionSort(int a[], int n)", {}, {}, "Entering selectionSort");
+    recordStep(3, "int minIndex, temp;", {}, {}, "Declared minIndex, temp");
 
-    for (int i = 0; i < n - 1; ++i) {
-        int minIdx = i;
-        recordStep(3, "int minIdx = i;", {}, {}, "Set current minimum index to " + std::to_string(i));
+    for (int i = 0; i < n - 1; i++) {
+        int minIndex = i;
+        recordStep(4, "for (int i = 0; i < n - 1; i++)", {}, {}, "Outer loop i = " + std::to_string(i));
+        recordStep(6, "minIndex = i;", {}, {}, "minIndex = " + std::to_string(minIndex));
 
-        for (int j = i + 1; j < n; ++j) {
-            recordStep(5, "if (arr[j] < arr[minIdx])", {j, minIdx}, {}, "Comparing candidate arr[" + std::to_string(j) + "] with minimum arr[" + std::to_string(minIdx) + "]");
-            if (arr[j] < arr[minIdx]) {
-                minIdx = j;
-                recordStep(6, "minIdx = j;", {}, {}, "Found new minimum index at " + std::to_string(minIdx));
+        for (int j = i + 1; j < n; j++) {
+            recordStep(7, "for (int j = i + 1; j < n; j++)", {}, {}, "Inner loop j = " + std::to_string(j));
+            recordStep(9, "if (a[j] < a[minIndex])", {j, minIndex}, {}, "Comparing a[" + std::to_string(j) + "] < a[minIndex]");
+            if (a[j] < a[minIndex]) {
+                minIndex = j;
+                recordStep(10, "minIndex = j;", {}, {}, "New minIndex = " + std::to_string(minIndex));
             }
         }
 
-        if (minIdx != i) {
-            std::swap(arr[i], arr[minIdx]);
-            recordStep(8, "std::swap(arr[i], arr[minIdx]);", {}, {i, minIdx}, "Swapped element into sorted position at index " + std::to_string(i));
-        }
+        InstrumentedInt temp = a[i];
+        recordStep(12, "temp = a[i];", {}, {i}, "temp = a[" + std::to_string(i) + "]");
+        a[i] = a[minIndex];
+        recordStep(13, "a[i] = a[minIndex];", {}, {i, minIndex}, "Moved min to index " + std::to_string(i));
+        a[minIndex] = temp;
+        recordStep(14, "a[minIndex] = temp;", {}, {i, minIndex}, "Completed swap");
     }
 
-    recordStep(10, "return arr;", {}, {}, "Selection sort complete.");
+    recordStep(16, "}", {}, {}, "Selection sort complete");
     result.totalComparisons = g_metrics.comparisons;
     return result;
 }
 
-// 3. Insertion Sort
+// 3. Insertion Sort (User Code)
 inline AlgorithmResult runInsertionSort(std::vector<int> input) {
     g_metrics.reset();
     AlgorithmResult result;
@@ -204,10 +202,9 @@ inline AlgorithmResult runInsertionSort(std::vector<int> input) {
     result.algorithmName = "Insertion Sort";
     result.timeComplexity = "O(n²)";
 
-    std::vector<InstrumentedInt> arr;
-    for (int v : input) arr.emplace_back(v);
-
-    int n = static_cast<int>(arr.size());
+    std::vector<InstrumentedInt> a;
+    for (int v : input) a.emplace_back(v);
+    int n = static_cast<int>(a.size());
     int step = 0;
 
     auto recordStep = [&](int line, const std::string& code, const std::vector<int>& cmp, const std::vector<int>& swp, const std::string& desc) {
@@ -215,7 +212,7 @@ inline AlgorithmResult runInsertionSort(std::vector<int> input) {
         s.stepNumber = ++step;
         s.lineNumber = line;
         s.code = code;
-        for (const auto& item : arr) s.arrayState.push_back(item.value);
+        for (const auto& item : a) s.arrayState.push_back(item.value);
         s.comparingIndices = cmp;
         s.swappedIndices = swp;
         s.comparisonsSoFar = g_metrics.comparisons;
@@ -223,45 +220,185 @@ inline AlgorithmResult runInsertionSort(std::vector<int> input) {
         result.steps.push_back(s);
     };
 
-    recordStep(1, "int n = arr.size();", {}, {}, "Array size = " + std::to_string(n));
+    recordStep(1, "void insertionSort(int a[], int n)", {}, {}, "Entering insertionSort");
+    recordStep(3, "int key, j;", {}, {}, "Declared key, j");
 
-    for (int i = 1; i < n; ++i) {
-        InstrumentedInt key = arr[i];
+    for (int i = 1; i < n; i++) {
+        InstrumentedInt key = a[i];
         int j = i - 1;
-        recordStep(3, "int key = arr[i]; int j = i - 1;", {}, {}, "Extracting key arr[" + std::to_string(i) + "] = " + std::to_string(key.value));
+        recordStep(4, "for (int i = 1; i < n; i++)", {}, {}, "Inserting element i = " + std::to_string(i));
+        recordStep(6, "key = a[i];", {}, {}, "key = " + std::to_string(key.value));
+        recordStep(7, "j = i - 1;", {}, {}, "j = " + std::to_string(j));
 
         while (j >= 0) {
-            recordStep(5, "while (j >= 0 && arr[j] > key)", {j}, {}, "Comparing arr[" + std::to_string(j) + "] > key (" + std::to_string(key.value) + ")");
-            if (arr[j] > key) {
-                arr[j + 1] = arr[j];
-                recordStep(6, "arr[j + 1] = arr[j];", {}, {j + 1}, "Shifted arr[" + std::to_string(j) + "] rightward to index " + std::to_string(j + 1));
+            recordStep(8, "while (j >= 0 && a[j] > key)", {j}, {}, "Comparing a[" + std::to_string(j) + "] > key (" + std::to_string(key.value) + ")");
+            if (a[j] > key) {
+                a[j + 1] = a[j];
+                recordStep(10, "a[j + 1] = a[j];", {}, {j + 1}, "Slid element rightward to index " + std::to_string(j + 1));
                 j--;
+                recordStep(11, "j--;", {}, {}, "j is now " + std::to_string(j));
             } else {
                 break;
             }
         }
-        arr[j + 1] = key;
-        recordStep(9, "arr[j + 1] = key;", {}, {j + 1}, "Inserted key into sorted position at index " + std::to_string(j + 1));
+        a[j + 1] = key;
+        recordStep(13, "a[j + 1] = key;", {}, {j + 1}, "Inserted key at index " + std::to_string(j + 1));
     }
 
-    recordStep(11, "return arr;", {}, {}, "Insertion sort complete.");
+    recordStep(15, "}", {}, {}, "Insertion sort complete");
     result.totalComparisons = g_metrics.comparisons;
     return result;
 }
 
-// 4. Linear Search
-inline AlgorithmResult runLinearSearch(std::vector<int> input, int target) {
+// 4. Merge Sort (User Code)
+inline AlgorithmResult runMergeSort(std::vector<int> input) {
+    g_metrics.reset();
+    AlgorithmResult result;
+    result.algorithmId = "merge-sort";
+    result.algorithmName = "Merge Sort";
+    result.timeComplexity = "O(n log n)";
+
+    std::vector<InstrumentedInt> a;
+    for (int v : input) a.emplace_back(v);
+    int n = static_cast<int>(a.size());
+    int step = 0;
+
+    auto recordStep = [&](int line, const std::string& code, const std::vector<int>& cmp, const std::vector<int>& swp, const std::string& desc) {
+        ExecutionStep s;
+        s.stepNumber = ++step;
+        s.lineNumber = line;
+        s.code = code;
+        for (const auto& item : a) s.arrayState.push_back(item.value);
+        s.comparingIndices = cmp;
+        s.swappedIndices = swp;
+        s.comparisonsSoFar = g_metrics.comparisons;
+        s.description = desc;
+        result.steps.push_back(s);
+    };
+
+    std::vector<InstrumentedInt> temp(std::max(50, n));
+
+    auto merge = [&](auto& self, int low, int mid, int high) -> void {
+        int i = low;
+        int j = mid + 1;
+        int k = low;
+        recordStep(1, "void merge(int a[], int low, int mid, int high)", {}, {}, "merge: [" + std::to_string(low) + ".." + std::to_string(high) + "]");
+
+        while (i <= mid && j <= high) {
+            recordStep(9, "if (a[i] <= a[j])", {i, j}, {}, "Comparing a[" + std::to_string(i) + "] <= a[" + std::to_string(j) + "]");
+            if (a[i] <= a[j]) {
+                temp[k++] = a[i++];
+            } else {
+                temp[k++] = a[j++];
+            }
+        }
+        while (i <= mid) {
+            temp[k++] = a[i++];
+        }
+        while (j <= high) {
+            temp[k++] = a[j++];
+        }
+        for (int idx = low; idx <= high; idx++) {
+            a[idx] = temp[idx];
+            recordStep(19, "a[i] = temp[i];", {}, {idx}, "Merged element into position " + std::to_string(idx));
+        }
+    };
+
+    auto mergeSort = [&](auto& self, int low, int high) -> void {
+        if (low < high) {
+            int mid = (low + high) / 2;
+            self(self, low, mid);
+            self(self, mid + 1, high);
+            merge(merge, low, mid, high);
+        }
+    };
+
+    if (n > 1) {
+        mergeSort(mergeSort, 0, n - 1);
+    }
+
+    recordStep(30, "}", {}, {}, "Merge sort complete");
+    result.totalComparisons = g_metrics.comparisons;
+    return result;
+}
+
+// 5. Heap Sort (User Code)
+inline AlgorithmResult runHeapSort(std::vector<int> input) {
+    g_metrics.reset();
+    AlgorithmResult result;
+    result.algorithmId = "heap-sort";
+    result.algorithmName = "Heap Sort";
+    result.timeComplexity = "O(n log n)";
+
+    std::vector<InstrumentedInt> a;
+    for (int v : input) a.emplace_back(v);
+    int n = static_cast<int>(a.size());
+    int step = 0;
+
+    auto recordStep = [&](int line, const std::string& code, const std::vector<int>& cmp, const std::vector<int>& swp, const std::string& desc) {
+        ExecutionStep s;
+        s.stepNumber = ++step;
+        s.lineNumber = line;
+        s.code = code;
+        for (const auto& item : a) s.arrayState.push_back(item.value);
+        s.comparingIndices = cmp;
+        s.swappedIndices = swp;
+        s.comparisonsSoFar = g_metrics.comparisons;
+        s.description = desc;
+        result.steps.push_back(s);
+    };
+
+    auto heapify = [&](auto& self, int size, int i) -> void {
+        int largest = i;
+        int left = 2 * i + 1;
+        int right = 2 * i + 2;
+
+        if (left < size) {
+            recordStep(6, "if (left < n && a[left] > a[largest])", {left, largest}, {}, "Checking left child > largest");
+            if (a[left] > a[largest]) {
+                largest = left;
+            }
+        }
+        if (right < size) {
+            recordStep(8, "if (right < n && a[right] > a[largest])", {right, largest}, {}, "Checking right child > largest");
+            if (a[right] > a[largest]) {
+                largest = right;
+            }
+        }
+        if (largest != i) {
+            std::swap(a[i], a[largest]);
+            recordStep(12, "swap(a[i], a[largest]);", {}, {i, largest}, "Swapped root with child");
+            self(self, size, largest);
+        }
+    };
+
+    recordStep(16, "void heapSort(int a[], int n)", {}, {}, "Entering heapSort");
+    for (int i = n / 2 - 1; i >= 0; i--) {
+        heapify(heapify, n, i);
+    }
+    for (int i = n - 1; i > 0; i--) {
+        std::swap(a[0], a[i]);
+        recordStep(22, "swap(a[0], a[i]);", {}, {0, i}, "Moved root max to position " + std::to_string(i));
+        heapify(heapify, i, 0);
+    }
+
+    recordStep(25, "}", {}, {}, "Heap sort complete");
+    result.totalComparisons = g_metrics.comparisons;
+    return result;
+}
+
+// 6. Linear Search (User Code)
+inline AlgorithmResult runLinearSearch(std::vector<int> input, int key) {
     g_metrics.reset();
     AlgorithmResult result;
     result.algorithmId = "linear-search";
     result.algorithmName = "Linear Search";
     result.timeComplexity = "O(n)";
 
-    std::vector<InstrumentedInt> arr;
-    for (int v : input) arr.emplace_back(v);
-    InstrumentedInt targetItem(target);
-
-    int n = static_cast<int>(arr.size());
+    std::vector<InstrumentedInt> a;
+    for (int v : input) a.emplace_back(v);
+    InstrumentedInt targetItem(key);
+    int n = static_cast<int>(a.size());
     int step = 0;
 
     auto recordStep = [&](int line, const std::string& code, const std::vector<int>& cmp, const std::string& desc) {
@@ -269,49 +406,45 @@ inline AlgorithmResult runLinearSearch(std::vector<int> input, int target) {
         s.stepNumber = ++step;
         s.lineNumber = line;
         s.code = code;
-        for (const auto& item : arr) s.arrayState.push_back(item.value);
+        for (const auto& item : a) s.arrayState.push_back(item.value);
         s.comparingIndices = cmp;
         s.comparisonsSoFar = g_metrics.comparisons;
         s.description = desc;
         result.steps.push_back(s);
     };
 
-    recordStep(1, "int n = arr.size();", {}, "Starting linear search for target = " + std::to_string(target));
+    recordStep(1, "int linearSearch(int a[], int n, int key)", {}, "Entering linearSearch for key = " + std::to_string(key));
 
-    int foundIndex = -1;
-    for (int i = 0; i < n; ++i) {
-        recordStep(3, "if (arr[i] == target)", {i}, "Checking arr[" + std::to_string(i) + "] == " + std::to_string(target));
-        if (arr[i] == targetItem) {
-            foundIndex = i;
-            recordStep(4, "return i;", {i}, "Target found at index " + std::to_string(i));
-            break;
+    for (int i = 0; i < n; i++) {
+        recordStep(3, "for (int i = 0; i < n; i++)", {}, "Iteration i = " + std::to_string(i));
+        recordStep(5, "if (a[i] == key)", {i}, "Checking a[" + std::to_string(i) + "] == key");
+        if (a[i] == targetItem) {
+            recordStep(6, "return i;", {i}, "Found match at index " + std::to_string(i));
+            result.totalComparisons = g_metrics.comparisons;
+            return result;
         }
     }
 
-    if (foundIndex == -1) {
-        recordStep(6, "return -1;", {}, "Target not found in array.");
-    }
-
+    recordStep(8, "return -1;", {}, "Key not found");
     result.totalComparisons = g_metrics.comparisons;
     return result;
 }
 
-// 5. Binary Search
-inline AlgorithmResult runBinarySearch(std::vector<int> input, int target) {
+// 7. Binary Search (User Code)
+inline AlgorithmResult runBinarySearch(std::vector<int> input, int key) {
     g_metrics.reset();
     AlgorithmResult result;
     result.algorithmId = "binary-search";
     result.algorithmName = "Binary Search";
     result.timeComplexity = "O(log n)";
 
-    // Binary search requires sorted array
+    // Sorted array required
     std::sort(input.begin(), input.end());
 
-    std::vector<InstrumentedInt> arr;
-    for (int v : input) arr.emplace_back(v);
-    InstrumentedInt targetItem(target);
-
-    int n = static_cast<int>(arr.size());
+    std::vector<InstrumentedInt> a;
+    for (int v : input) a.emplace_back(v);
+    InstrumentedInt targetItem(key);
+    int n = static_cast<int>(a.size());
     int step = 0;
 
     auto recordStep = [&](int line, const std::string& code, const std::vector<int>& cmp, const std::string& desc) {
@@ -319,7 +452,7 @@ inline AlgorithmResult runBinarySearch(std::vector<int> input, int target) {
         s.stepNumber = ++step;
         s.lineNumber = line;
         s.code = code;
-        for (const auto& item : arr) s.arrayState.push_back(item.value);
+        for (const auto& item : a) s.arrayState.push_back(item.value);
         s.comparingIndices = cmp;
         s.comparisonsSoFar = g_metrics.comparisons;
         s.description = desc;
@@ -328,39 +461,37 @@ inline AlgorithmResult runBinarySearch(std::vector<int> input, int target) {
 
     int low = 0;
     int high = n - 1;
-    recordStep(1, "int low = 0, high = n - 1;", {}, "Initialized search boundaries [0, " + std::to_string(high) + "] for target " + std::to_string(target));
+    recordStep(1, "int binarySearch(int a[], int n, int key)", {}, "Entering binarySearch for key = " + std::to_string(key));
+    recordStep(3, "int low = 0;", {}, "low = 0");
+    recordStep(4, "int high = n - 1;", {}, "high = " + std::to_string(high));
 
-    bool found = false;
     while (low <= high) {
-        int mid = low + (high - low) / 2;
-        recordStep(3, "int mid = low + (high - low) / 2;", {mid}, "Calculated midpoint mid = " + std::to_string(mid));
+        recordStep(5, "while (low <= high)", {}, "Searching range [" + std::to_string(low) + ".." + std::to_string(high) + "]");
+        int mid = (low + high) / 2;
+        recordStep(7, "int mid = (low + high) / 2;", {mid}, "mid = " + std::to_string(mid));
 
-        recordStep(4, "if (arr[mid] == target)", {mid}, "Comparing arr[" + std::to_string(mid) + "] == " + std::to_string(target));
-        if (arr[mid] == targetItem) {
-            recordStep(5, "return mid;", {mid}, "Target found at index " + std::to_string(mid));
-            found = true;
-            break;
-        }
-
-        recordStep(7, "else if (arr[mid] < target)", {mid}, "Checking if arr[" + std::to_string(mid) + "] < " + std::to_string(target));
-        if (arr[mid] < targetItem) {
-            low = mid + 1;
-            recordStep(8, "low = mid + 1;", {}, "Target is in right half; moving low to " + std::to_string(low));
+        recordStep(8, "if (a[mid] == key)", {mid}, "Comparing a[" + std::to_string(mid) + "] == key");
+        if (a[mid] == targetItem) {
+            recordStep(9, "return mid;", {mid}, "Match found at mid = " + std::to_string(mid));
+            result.totalComparisons = g_metrics.comparisons;
+            return result;
         } else {
-            high = mid - 1;
-            recordStep(10, "high = mid - 1;", {}, "Target is in left half; moving high to " + std::to_string(high));
+            recordStep(10, "else if (a[mid] < key)", {mid}, "Comparing a[" + std::to_string(mid) + "] < key");
+            if (a[mid] < targetItem) {
+                low = mid + 1;
+                recordStep(11, "low = mid + 1;", {}, "Moved low to " + std::to_string(low));
+            } else {
+                high = mid - 1;
+                recordStep(13, "high = mid - 1;", {}, "Moved high to " + std::to_string(high));
+            }
         }
     }
 
-    if (!found) {
-        recordStep(12, "return -1;", {}, "Target not found within boundaries.");
-    }
-
+    recordStep(15, "return -1;", {}, "Key not found in array");
     result.totalComparisons = g_metrics.comparisons;
     return result;
 }
 
-// Convert AlgorithmResult to JSON
 inline std::string resultToJson(const AlgorithmResult& res) {
     std::ostringstream ss;
     ss << "{\n";
@@ -379,14 +510,12 @@ inline std::string resultToJson(const AlgorithmResult& res) {
         ss << "      \"comparisonsSoFar\": " << s.comparisonsSoFar << ",\n";
         ss << "      \"description\": \"" << s.description << "\",\n";
         
-        // arrayState
         ss << "      \"arrayState\": [";
         for (size_t a = 0; a < s.arrayState.size(); ++a) {
             ss << s.arrayState[a] << (a + 1 < s.arrayState.size() ? "," : "");
         }
         ss << "],\n";
 
-        // comparingIndices
         ss << "      \"comparingIndices\": [";
         for (size_t c = 0; c < s.comparingIndices.size(); ++c) {
             ss << s.comparingIndices[c] << (c + 1 < s.comparingIndices.size() ? "," : "");

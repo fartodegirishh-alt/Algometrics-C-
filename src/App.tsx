@@ -11,6 +11,7 @@ import { PlaybackControls } from './components/PlaybackControls';
 import { ArrayControls } from './components/ArrayControls';
 import { MetricsSummary } from './components/MetricsSummary';
 import { LineComplexityTable } from './components/LineComplexityTable';
+import { LineByLineCostTable } from './components/LineByLineCostTable';
 import { CppExportModal } from './components/CppExportModal';
 import { AlgorithmDefinition, InputDistribution, StepState } from './types/algorithm';
 import { ALGORITHMS } from './algorithms/registry';
@@ -383,6 +384,15 @@ export default function App() {
                 )}
               </div>
             </div>
+
+            {/* Line-by-Line Complexity Table with Cost, Repetition, and Total Time */}
+            <LineByLineCostTable
+              algorithm={algorithm}
+              currentStep={currentStep}
+              selectedLine={selectedLine}
+              setSelectedLine={setSelectedLine}
+              arraySize={arraySize}
+            />
           </div>
         )}
 

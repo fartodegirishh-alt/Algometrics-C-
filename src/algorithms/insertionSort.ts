@@ -6,129 +6,181 @@ import {
   StepState,
 } from '../types/algorithm';
 import { generateArray } from '../utils/arrayUtils';
-import { generateStandaloneCpp } from './cppGenerators';
 
-const cppCode = `void insertionSort(std::vector<InstrumentedInt>& arr) {
-    int n = arr.size();
-    for (int i = 1; i < n; ++i) {
-        InstrumentedInt key = arr[i];
-        int j = i - 1;
-        while (j >= 0 && arr[j] > key) {
-            arr[j + 1] = arr[j];
-            j = j - 1;
+const cppCode = `void insertionSort(int a[], int n)
+{
+    int key, j;
+
+    for (int i = 1; i < n; i++)
+    {
+        key = a[i];
+        j = i - 1;
+
+        while (j >= 0 && a[j] > key)
+        {
+            a[j + 1] = a[j];
+            j--;
         }
-        arr[j + 1] = key;
+
+        a[j + 1] = key;
     }
 }`;
 
 const lines: LineCostDefinition[] = [
   {
     lineNumber: 1,
-    code: 'void insertionSort(std::vector<InstrumentedInt>& arr) {',
+    code: 'void insertionSort(int a[], int n)',
     costLabel: 'c1',
     theoreticalFrequency: '1',
-    frequencyExplanation: 'Function entry.',
+    frequencyExplanation: 'Function signature and entry invocation.',
     operationType: 'declaration',
     baseCost: 1,
+    complexityClass: 'O(1)',
   },
   {
     lineNumber: 2,
-    code: '    int n = arr.size();',
+    code: '{',
     costLabel: 'c2',
     theoreticalFrequency: '1',
-    frequencyExplanation: 'Array size query.',
-    operationType: 'assignment',
-    baseCost: 1,
+    frequencyExplanation: 'Function block opening.',
+    operationType: 'none',
+    baseCost: 0,
+    complexityClass: 'O(1)',
   },
   {
     lineNumber: 3,
-    code: '    for (int i = 1; i < n; ++i) {',
+    code: '    int key, j;',
     costLabel: 'c3',
-    theoreticalFrequency: 'n',
-    frequencyExplanation: 'Iterates from 2nd element to end (n-1 iterations, n loop checks).',
-    operationType: 'loop_control',
+    theoreticalFrequency: '1',
+    frequencyExplanation: 'Stack variable declarations for insertion key and shifting index.',
+    operationType: 'declaration',
     baseCost: 1,
+    complexityClass: 'O(1)',
   },
   {
     lineNumber: 4,
-    code: '        InstrumentedInt key = arr[i];',
+    code: '    for (int i = 1; i < n; i++)',
     costLabel: 'c4',
-    theoreticalFrequency: 'n - 1',
-    frequencyExplanation: 'Extract current element as key to insert into sorted prefix (1 assignment).',
-    operationType: 'assignment',
+    theoreticalFrequency: 'n',
+    frequencyExplanation: 'Outer loop iterates through indices 1 to n - 1 (n loop condition checks).',
+    operationType: 'loop_control',
     baseCost: 1,
+    complexityClass: 'O(N)',
+    simpleExplanation: 'Picks the next element to insert into the sorted prefix.',
   },
   {
     lineNumber: 5,
-    code: '        int j = i - 1;',
+    code: '    {',
     costLabel: 'c5',
     theoreticalFrequency: 'n - 1',
-    frequencyExplanation: 'Set scan index to end of sorted prefix.',
-    operationType: 'assignment',
-    baseCost: 1,
+    frequencyExplanation: 'Outer loop body block opening.',
+    operationType: 'none',
+    baseCost: 0,
+    complexityClass: 'O(N)',
   },
   {
     lineNumber: 6,
-    code: '        while (j >= 0 && arr[j] > key) {',
+    code: '        key = a[i];',
     costLabel: 'c6',
-    theoreticalFrequency: 'Σ_{i=1}^{n-1} t_i',
-    frequencyExplanation: 'While loop condition: t_i is the number of times the while test is checked for value i. Best case: t_i = 1 (runs n-1 times). Worst case: t_i = i + 1 (runs n(n+1)/2 - 1 times).',
-    operationType: 'comparison',
+    theoreticalFrequency: 'n - 1',
+    frequencyExplanation: 'Saves current candidate into key register.',
+    operationType: 'assignment',
     baseCost: 1,
+    complexityClass: 'O(N)',
+    simpleExplanation: 'Caches element being inserted.',
   },
   {
     lineNumber: 7,
-    code: '            arr[j + 1] = arr[j];',
+    code: '        j = i - 1;',
     costLabel: 'c7',
-    theoreticalFrequency: 'Σ_{i=1}^{n-1} (t_i - 1)',
-    frequencyExplanation: 'Shifting element right to make room for key. 0 shifts in best case; n(n-1)/2 in worst case.',
+    theoreticalFrequency: 'n - 1',
+    frequencyExplanation: 'Sets pointer j to immediately preceding sorted item.',
     operationType: 'assignment',
     baseCost: 1,
+    complexityClass: 'O(N)',
   },
   {
     lineNumber: 8,
-    code: '            j = j - 1;',
+    code: '        while (j >= 0 && a[j] > key)',
     costLabel: 'c8',
-    theoreticalFrequency: 'Σ_{i=1}^{n-1} (t_i - 1)',
-    frequencyExplanation: 'Decrement pointer j to examine next element to left.',
-    operationType: 'assignment',
+    theoreticalFrequency: 'Σ_{i=1}^{n-1} (t_i + 1)',
+    frequencyExplanation: 'Condition check! Evaluates boundary and comparison a[j] > key. Runs 1 time per outer pass in best case (sorted), or i times in worst case (reversed).',
+    operationType: 'comparison',
     baseCost: 1,
+    complexityClass: 'O(N²)',
+    simpleExplanation: 'Checks if larger sorted items must slide right to make space.',
   },
   {
     lineNumber: 9,
-    code: '        }',
+    code: '        {',
     costLabel: 'c9',
-    theoreticalFrequency: 'Σ_{i=1}^{n-1} (t_i - 1)',
-    frequencyExplanation: 'While loop closure.',
+    theoreticalFrequency: 'Σ_{i=1}^{n-1} t_i',
+    frequencyExplanation: 'While loop body block opening.',
     operationType: 'none',
     baseCost: 0,
+    complexityClass: 'O(N²)',
   },
   {
     lineNumber: 10,
-    code: '        arr[j + 1] = key;',
+    code: '            a[j + 1] = a[j];',
     costLabel: 'c10',
-    theoreticalFrequency: 'n - 1',
-    frequencyExplanation: 'Insert extracted key into its correct sorted location (1 assignment per outer pass).',
+    theoreticalFrequency: 'Σ_{i=1}^{n-1} t_i',
+    frequencyExplanation: 'Right-shift shift: copies larger element one slot forward.',
     operationType: 'assignment',
     baseCost: 1,
+    complexityClass: 'O(N²)',
+    simpleExplanation: 'Slides item right to make space for key.',
   },
   {
     lineNumber: 11,
-    code: '    }',
+    code: '            j--;',
     costLabel: 'c11',
-    theoreticalFrequency: 'n - 1',
-    frequencyExplanation: 'Outer for loop closure.',
-    operationType: 'none',
-    baseCost: 0,
+    theoreticalFrequency: 'Σ_{i=1}^{n-1} t_i',
+    frequencyExplanation: 'Decrements search index.',
+    operationType: 'assignment',
+    baseCost: 1,
+    complexityClass: 'O(N²)',
   },
   {
     lineNumber: 12,
-    code: '}',
+    code: '        }',
     costLabel: 'c12',
+    theoreticalFrequency: 'n - 1',
+    frequencyExplanation: 'While loop close.',
+    operationType: 'none',
+    baseCost: 0,
+    complexityClass: 'O(N)',
+  },
+  {
+    lineNumber: 13,
+    code: '        a[j + 1] = key;',
+    costLabel: 'c13',
+    theoreticalFrequency: 'n - 1',
+    frequencyExplanation: 'Inserts key into its properly ordered position in sorted prefix.',
+    operationType: 'assignment',
+    baseCost: 1,
+    complexityClass: 'O(N)',
+    simpleExplanation: 'Drops key into its correct sorted slot.',
+  },
+  {
+    lineNumber: 14,
+    code: '    }',
+    costLabel: 'c14',
+    theoreticalFrequency: '1',
+    frequencyExplanation: 'End of outer loop.',
+    operationType: 'none',
+    baseCost: 0,
+    complexityClass: 'O(1)',
+  },
+  {
+    lineNumber: 15,
+    code: '}',
+    costLabel: 'c15',
     theoreticalFrequency: '1',
     frequencyExplanation: 'Function return.',
     operationType: 'return',
     baseCost: 1,
+    complexityClass: 'O(1)',
   },
 ];
 
@@ -136,8 +188,8 @@ export const insertionSortDefinition: AlgorithmDefinition = {
   id: 'insertion-sort',
   name: 'Insertion Sort',
   category: 'sorting',
-  shortDescription: 'Builds sorted array one item at a time by shifting larger elements right and inserting key.',
-  fullDescription: 'Insertion Sort maintains a sorted prefix. For each element at index i, it saves the key and shifts all preceding larger elements one position to the right until finding the correct slot. Outstanding on small or nearly-sorted datasets.',
+  shortDescription: 'Builds sorted array one item at a time by sliding larger items rightward.',
+  fullDescription: 'Insertion Sort iterates through the array and inserts each element into its proper position within the already sorted prefix. Highly efficient on nearly-sorted data, achieving Ω(n) comparisons in the best case.',
   requiresSorted: false,
   cppCode,
   lines,
@@ -153,17 +205,17 @@ export const insertionSortDefinition: AlgorithmDefinition = {
       calculate: (n: number, dist?: InputDistribution) => {
         const worst = (n * (n - 1)) / 2;
         const best = n - 1;
-        const avg = dist === 'sorted' ? best : dist === 'reversed' ? worst : worst / 2;
+        const avg = dist === 'sorted' ? best : dist === 'reversed' ? worst : (worst + best) / 2;
         return { best, worst, avg };
       },
     },
     assignmentsFormula: {
       best: '2(n - 1)',
-      worst: 'n(n - 1) / 2 + 2(n - 1)',
-      average: 'n(n - 1) / 4 + 2(n - 1)',
+      worst: 'n(n - 1)/2 + 2(n - 1)',
+      average: 'n(n - 1)/4 + 2(n - 1)',
       calculate: (n: number, dist?: InputDistribution) => {
-        const best = 2 * (n - 1);
         const worst = (n * (n - 1)) / 2 + 2 * (n - 1);
+        const best = 2 * (n - 1);
         const avg = dist === 'sorted' ? best : dist === 'reversed' ? worst : (worst + best) / 2;
         return { best, worst, avg };
       },
@@ -171,25 +223,30 @@ export const insertionSortDefinition: AlgorithmDefinition = {
   },
   derivations: [
     {
-      title: '1. CLRS Cost Model Formulation',
-      formula: 'T(n) = c_1 + c_2 + c_3 n + c_4 (n-1) + c_5 (n-1) + c_6 \\sum_{i=1}^{n-1} t_i + c_7 \\sum_{i=1}^{n-1} (t_i - 1) + c_{10} (n-1)',
-      explanation: 'Classic Cormen-Leiserson-Rivest-Stein (CLRS) line-by-line model, where t_i is the number of while loop test checks for each iteration i.',
+      title: '1. Line-by-Line While Condition Formulation',
+      formula: 'T(n) = c_1 + c_3 + c_4 \\cdot n + c_6(n-1) + c_7(n-1) + c_8 \\sum_{i=1}^{n-1} (t_i + 1) + c_{10} \\sum_{i=1}^{n-1} t_i + c_{13}(n-1)',
+      explanation: 'In the best case (sorted), t_i = 0, so the while loop checks exactly 1 condition per pass, yielding linear Ω(n) time. In the worst case (reversed), t_i = i, yielding quadratic O(n²) time.',
     },
     {
-      title: '2. Best-Case Analysis (Already Sorted)',
-      formula: 't_i = 1 \\implies T(n) = (c_3 + c_4 + c_5 + c_6 + c_{10})n + \\text{const} = \\Omega(n)',
-      explanation: 'When the array is already sorted, arr[j] > key is immediately false on the first check, yielding linear time O(n) with 0 shifts.',
-    },
-    {
-      title: '3. Worst-Case Analysis (Reverse Sorted)',
-      formula: 't_i = i + 1 \\implies \\sum_{i=1}^{n-1} i = \\frac{n(n-1)}{2} \\implies T(n) = \\mathcal{O}(n^2)',
-      explanation: 'When sorted in reverse order, every element must be compared against and shifted past every predecessor in the sorted prefix.',
+      title: '2. Average-Case Comparison Analysis',
+      formula: 'E[C(n)] = \\sum_{i=1}^{n-1} \\frac{i}{2} = \\frac{1}{2} \\frac{n(n - 1)}{2} = \\frac{n(n - 1)}{4} \\approx 0.25 n^2',
+      explanation: 'On average, each element must slide past half of the already-sorted prefix before finding its insertion slot.',
     },
   ],
+  intuitiveGuide: {
+    shape: 'linear',
+    plainEnglishSummary: 'Like sorting playing cards in your hand: take the next card and slide it left until it fits.',
+    scalingRule: 'If the data is already sorted, it runs in linear O(n) time. On reversed data, it takes O(n²).',
+    threeStepBreakdown: {
+      step1Loops: 'For each item i from 1 to n - 1, compare it backwards against sorted cards.',
+      step2Counts: 'Best case: 1 comparison per card = (n - 1). Worst case: 1 + 2 + ... + (n - 1) = n(n - 1)/2.',
+      step3BigO: 'Adapts from O(n) on sorted data to O(n²) on reverse data.',
+    },
+  },
   generateSteps: (initialArray: number[]): StepState[] => {
     const steps: StepState[] = [];
-    const arr = [...initialArray];
-    const n = arr.length;
+    const a = [...initialArray];
+    const n = a.length;
     let comparisons = 0;
     let assignments = 0;
     const lineHits: { [line: number]: number } = {};
@@ -202,112 +259,90 @@ export const insertionSortDefinition: AlgorithmDefinition = {
       sorted: number[],
       msg: string,
       expr?: string,
-      result?: string
+      res?: string
     ) => {
       lineHits[line] = (lineHits[line] || 0) + 1;
       steps.push({
         stepIndex: steps.length,
         lineNumber: line,
-        array: [...arr],
-        indices: { ...indices },
-        comparingIndices: [...comparing],
-        swappingIndices: [...swapping],
-        sortedIndices: [...sorted],
+        array: [...a],
+        indices,
+        comparingIndices: comparing,
+        swappingIndices: swapping,
+        sortedIndices: sorted,
         comparisons,
         assignments,
         lineHits: { ...lineHits },
         message: msg,
         highlightExpression: expr,
-        expressionResult: result,
+        expressionResult: res,
       });
     };
 
-    record(1, {}, [], [], [], 'Function invoked: insertionSort(arr)');
-    record(2, { n }, [], [], [], `int n = arr.size() [n = ${n}]`);
+    record(1, {}, [], [], [], `Starting insertionSort(a, n = ${n})`);
+    record(3, {}, [], [], [], `Declared int key, j`);
 
-    const sortedIndices = [0];
+    const sortedIndices: number[] = [0];
 
-    for (let i = 1; i < n; ++i) {
-      record(3, { i }, [], [], [...sortedIndices], `Outer loop: inserting element at index i = ${i}`);
+    for (let i = 1; i < n; i++) {
+      record(4, { i }, [], [], [...sortedIndices], `Outer loop: inserting element at index i = ${i}`);
 
-      const key = arr[i];
-      assignments += 1;
-      record(4, { i, key: i }, [], [], [...sortedIndices], `Extracted key = arr[${i}] (${key})`);
+      const key = a[i];
+      assignments++;
+      record(6, { i, key }, [], [], [...sortedIndices], `key = a[${i}] (${key})`);
 
       let j = i - 1;
-      assignments += 1;
-      record(5, { i, j }, [], [], [...sortedIndices], `Initialized scan pointer j = ${j}`);
+      assignments++;
+      record(7, { i, j, key }, [], [], [...sortedIndices], `j = ${j}`);
 
       while (j >= 0) {
-        comparisons += 1;
-        const shouldShift = arr[j] > key;
-        record(
-          6,
-          { i, j, 'j+1': j + 1 },
-          [j],
-          [],
-          [...sortedIndices],
-          `Comparing arr[${j}] (${arr[j]}) > key (${key}) -> ${shouldShift ? 'Shift needed' : 'Insertion spot reached'}`,
-          `arr[${j}] > ${key}`,
-          `${arr[j]} > ${key} -> ${shouldShift}`
-        );
+        comparisons++;
+        const cmpExpr = `a[${j}] > key`;
+        const condition = a[j] > key;
+        const cmpRes = `${a[j]} > ${key} -> ${condition}`;
 
-        if (!shouldShift) {
+        record(8, { i, j, key }, [j], [], [...sortedIndices], `Testing while (j >= 0 && a[j] > key)`, cmpExpr, cmpRes);
+
+        if (!condition) {
           break;
         }
 
-        arr[j + 1] = arr[j];
-        assignments += 1;
-        record(
-          7,
-          { i, j, 'j+1': j + 1 },
-          [],
-          [j, j + 1],
-          [...sortedIndices],
-          `Shifted arr[${j}] (${arr[j]}) to index ${j + 1}`
-        );
+        a[j + 1] = a[j];
+        assignments++;
+        record(10, { i, j, key }, [], [j + 1], [...sortedIndices], `a[${j + 1}] = a[${j}] (${a[j]}), sliding item right`);
 
-        j = j - 1;
-        assignments += 1;
-        record(8, { i, j }, [], [], [...sortedIndices], `j decremented to ${j}`);
+        j--;
+        assignments++;
+        record(11, { i, j, key }, [], [], [...sortedIndices], `j-- (j is now ${j})`);
       }
 
-      arr[j + 1] = key;
-      assignments += 1;
+      a[j + 1] = key;
+      assignments++;
+      record(13, { i, j: j + 1, key }, [], [j + 1], [...sortedIndices, i], `a[${j + 1}] = key (${key}), inserted into place`);
+
       sortedIndices.push(i);
-      record(
-        10,
-        { i, 'j+1': j + 1 },
-        [],
-        [j + 1],
-        [...sortedIndices],
-        `Inserted key (${key}) into slot arr[${j + 1}]`
-      );
     }
 
-    record(12, {}, [], [], Array.from({ length: n }, (_, idx) => idx), `Insertion Sort completed! Comparisons: ${comparisons}, Assignments: ${assignments}`);
+    record(15, {}, [], [], Array.from({ length: n }, (_, idx) => idx), `Insertion sort complete. Total comparisons: ${comparisons}`);
 
     return steps;
   },
-
   runBenchmark: (sizes: number[], distribution: InputDistribution): BenchmarkPoint[] => {
     return sizes.map((n) => {
       const arr = generateArray(n, distribution);
       let comparisons = 0;
       let assignments = 0;
 
-      for (let i = 1; i < n; ++i) {
+      for (let i = 1; i < n; i++) {
         const key = arr[i];
-        assignments++;
         let j = i - 1;
         assignments++;
         while (j >= 0) {
           comparisons++;
           if (arr[j] > key) {
             arr[j + 1] = arr[j];
-            assignments++;
             j--;
-            assignments++;
+            assignments += 2;
           } else {
             break;
           }
@@ -316,30 +351,67 @@ export const insertionSortDefinition: AlgorithmDefinition = {
         assignments++;
       }
 
-      const theoreticalWorst = (n * (n - 1)) / 2 + 2 * (n - 1);
-      const theoreticalBest = n - 1 + 2 * (n - 1);
+      const theoreticalWorst = (n * (n - 1)) / 2;
+      const theoreticalBest = n - 1;
       const theoreticalAvg = (theoreticalWorst + theoreticalBest) / 2;
 
       return {
         n,
         observedComparisons: comparisons,
         observedAssignments: assignments,
-        totalOperations: comparisons + assignments,
+        totalOperations: comparisons,
         theoreticalWorst,
         theoreticalAvg,
         theoreticalBest,
       };
     });
   },
+  getStandaloneCpp: (arraySize: number, distribution: InputDistribution): string => {
+    const sampleArr = generateArray(arraySize, distribution);
+    return `#include <iostream>
+using namespace std;
 
-  getStandaloneCpp: (arraySize: number, distribution: InputDistribution) => {
-    return generateStandaloneCpp(
-      'Insertion Sort',
-      cppCode,
-      'insertionSort(arr);',
-      false,
-      arraySize,
-      distribution
-    );
+void insertionSort(int a[], int n)
+{
+    int key, j;
+
+    for (int i = 1; i < n; i++)
+    {
+        key = a[i];
+        j = i - 1;
+
+        while (j >= 0 && a[j] > key)
+        {
+            a[j + 1] = a[j];
+            j--;
+        }
+
+        a[j + 1] = key;
+    }
+}
+
+int main()
+{
+    int a[50], n;
+
+    // Default sample input initialized for demonstration:
+    n = ${Math.min(arraySize, 50)};
+    int sampleData[] = {${sampleArr.slice(0, 50).join(', ')}};
+    for (int i = 0; i < n; i++) a[i] = sampleData[i];
+
+    cout << "Original array: ";
+    for (int i = 0; i < n; i++)
+        cout << a[i] << " ";
+    cout << "\\n";
+
+    insertionSort(a, n);
+
+    cout << "Sorted array: ";
+    for (int i = 0; i < n; i++)
+        cout << a[i] << " ";
+    cout << "\\n";
+
+    return 0;
+}`;
   },
 };

@@ -6,239 +6,348 @@ import {
   StepState,
 } from '../types/algorithm';
 import { generateArray } from '../utils/arrayUtils';
-import { generateStandaloneCpp } from './cppGenerators';
 
-const cppCode = `void merge(std::vector<InstrumentedInt>& arr, int left, int mid, int right) {
-    std::vector<InstrumentedInt> temp(right - left + 1);
-    int i = left, j = mid + 1, k = 0;
-    while (i <= mid && j <= right) {
-        if (arr[i] <= arr[j]) {
-            temp[k++] = arr[i++];
-        } else {
-            temp[k++] = arr[j++];
-        }
+const cppCode = `void merge(int a[], int low, int mid, int high)
+{
+    int temp[50];
+    int i = low;
+    int j = mid + 1;
+    int k = low;
+
+    while (i <= mid && j <= high)
+    {
+        if (a[i] <= a[j])
+            temp[k++] = a[i++];
+        else
+            temp[k++] = a[j++];
     }
-    while (i <= mid) temp[k++] = arr[i++];
-    while (j <= right) temp[k++] = arr[j++];
-    for (int p = 0; p < k; ++p) arr[left + p] = temp[p];
+
+    while (i <= mid)
+        temp[k++] = a[i++];
+
+    while (j <= high)
+        temp[k++] = a[j++];
+
+    for (int i = low; i <= high; i++)
+        a[i] = temp[i];
 }
 
-void mergeSort(std::vector<InstrumentedInt>& arr, int left, int right) {
-    if (left < right) {
-        int mid = left + (right - left) / 2;
-        mergeSort(arr, left, mid);
-        mergeSort(arr, mid + 1, right);
-        merge(arr, left, mid, right);
+void mergeSort(int a[], int low, int high)
+{
+    if (low < high)
+    {
+        int mid = (low + high) / 2;
+
+        mergeSort(a, low, mid);
+        mergeSort(a, mid + 1, high);
+
+        merge(a, low, mid, high);
     }
 }`;
 
 const lines: LineCostDefinition[] = [
   {
     lineNumber: 1,
-    code: 'void merge(std::vector<InstrumentedInt>& arr, int left, int mid, int right) {',
+    code: 'void merge(int a[], int low, int mid, int high)',
     costLabel: 'c1',
-    theoreticalFrequency: 'n - 1 calls',
-    frequencyExplanation: 'Merge routine executed once per non-leaf internal node in recurrence tree.',
+    theoreticalFrequency: 'n - 1',
+    frequencyExplanation: 'Merge routine called for every non-trivial subtree.',
     operationType: 'declaration',
     baseCost: 1,
+    complexityClass: 'O(log N)',
   },
   {
     lineNumber: 2,
-    code: '    std::vector<InstrumentedInt> temp(right - left + 1);',
+    code: '{',
     costLabel: 'c2',
-    theoreticalFrequency: 'n - 1 calls',
-    frequencyExplanation: 'Allocates auxiliary buffer for merging sub-arrays. Accounts for O(n) auxiliary space.',
-    operationType: 'assignment',
-    baseCost: 1,
+    theoreticalFrequency: 'n - 1',
+    frequencyExplanation: 'Block start.',
+    operationType: 'none',
+    baseCost: 0,
+    complexityClass: 'O(1)',
   },
   {
     lineNumber: 3,
-    code: '    int i = left, j = mid + 1, k = 0;',
+    code: '    int temp[50];',
     costLabel: 'c3',
-    theoreticalFrequency: 'n - 1 calls',
-    frequencyExplanation: 'Indices initialization for left subarray, right subarray, and output buffer.',
-    operationType: 'assignment',
-    baseCost: 3,
+    theoreticalFrequency: 'n - 1',
+    frequencyExplanation: 'Auxiliary temporary array allocation for merging sorted halves.',
+    operationType: 'declaration',
+    baseCost: 1,
+    complexityClass: 'O(1)',
+    simpleExplanation: 'Buffer to hold merged elements in order.',
   },
   {
     lineNumber: 4,
-    code: '    while (i <= mid && j <= right) {',
+    code: '    int i = low;',
     costLabel: 'c4',
-    theoreticalFrequency: 'O(n log n)',
-    frequencyExplanation: 'Merge loop condition: runs until one of the two halves is exhausted.',
-    operationType: 'loop_control',
+    theoreticalFrequency: 'n - 1',
+    frequencyExplanation: 'Left subarray pointer initialization.',
+    operationType: 'assignment',
     baseCost: 1,
+    complexityClass: 'O(1)',
   },
   {
     lineNumber: 5,
-    code: '        if (arr[i] <= arr[j]) {',
+    code: '    int j = mid + 1;',
     costLabel: 'c5',
-    theoreticalFrequency: 'O(n log n)',
-    frequencyExplanation: 'Core Comparison: picks smaller of the two heads. Guaranteed <= n log2(n) comparisons total.',
-    operationType: 'comparison',
+    theoreticalFrequency: 'n - 1',
+    frequencyExplanation: 'Right subarray pointer initialization.',
+    operationType: 'assignment',
     baseCost: 1,
+    complexityClass: 'O(1)',
   },
   {
     lineNumber: 6,
-    code: '            temp[k++] = arr[i++];',
+    code: '    int k = low;',
     costLabel: 'c6',
-    theoreticalFrequency: 'O(n log n)',
-    frequencyExplanation: 'Copying left element into buffer (1 assignment).',
+    theoreticalFrequency: 'n - 1',
+    frequencyExplanation: 'Auxiliary merge pointer initialization.',
     operationType: 'assignment',
     baseCost: 1,
+    complexityClass: 'O(1)',
   },
   {
     lineNumber: 7,
-    code: '        } else {',
+    code: '    while (i <= mid && j <= high)',
     costLabel: 'c7',
-    theoreticalFrequency: 'O(n log n)',
-    frequencyExplanation: 'Else branch.',
-    operationType: 'none',
-    baseCost: 0,
+    theoreticalFrequency: 'n log n',
+    frequencyExplanation: 'Main two-pointer merge comparison loop.',
+    operationType: 'loop_control',
+    baseCost: 1,
+    complexityClass: 'O(N log N)',
   },
   {
     lineNumber: 8,
-    code: '            temp[k++] = arr[j++];',
+    code: '    {',
     costLabel: 'c8',
-    theoreticalFrequency: 'O(n log n)',
-    frequencyExplanation: 'Copying right element into buffer (1 assignment).',
-    operationType: 'assignment',
-    baseCost: 1,
+    theoreticalFrequency: 'n log n',
+    frequencyExplanation: 'Loop body opening.',
+    operationType: 'none',
+    baseCost: 0,
+    complexityClass: 'O(N log N)',
   },
   {
     lineNumber: 9,
-    code: '        }',
+    code: '        if (a[i] <= a[j])',
     costLabel: 'c9',
-    theoreticalFrequency: 'O(n log n)',
-    frequencyExplanation: 'If-else closure.',
-    operationType: 'none',
-    baseCost: 0,
+    theoreticalFrequency: 'n log n',
+    frequencyExplanation: 'Comparison of heads of two sorted lists: a[i] <= a[j].',
+    operationType: 'comparison',
+    baseCost: 1,
+    complexityClass: 'O(N log N)',
+    simpleExplanation: 'Picks the smaller of the two subarray heads.',
   },
   {
     lineNumber: 10,
-    code: '    }',
+    code: '            temp[k++] = a[i++];',
     costLabel: 'c10',
-    theoreticalFrequency: 'n - 1 calls',
-    frequencyExplanation: 'End of dual-scan while loop.',
-    operationType: 'none',
-    baseCost: 0,
+    theoreticalFrequency: 'k_1 · n log n',
+    frequencyExplanation: 'Copies left element into temp and increments pointers.',
+    operationType: 'assignment',
+    baseCost: 2,
+    complexityClass: 'O(N log N)',
   },
   {
     lineNumber: 11,
-    code: '    while (i <= mid) temp[k++] = arr[i++];',
+    code: '        else',
     costLabel: 'c11',
-    theoreticalFrequency: 'O(n log n)',
-    frequencyExplanation: 'Drain remaining elements of left partition directly into temp buffer.',
-    operationType: 'assignment',
-    baseCost: 1,
+    theoreticalFrequency: 'n log n',
+    frequencyExplanation: 'Branch for smaller right element.',
+    operationType: 'none',
+    baseCost: 0,
+    complexityClass: 'O(N log N)',
   },
   {
     lineNumber: 12,
-    code: '    while (j <= right) temp[k++] = arr[j++];',
+    code: '            temp[k++] = a[j++];',
     costLabel: 'c12',
-    theoreticalFrequency: 'O(n log n)',
-    frequencyExplanation: 'Drain remaining elements of right partition directly into temp buffer.',
+    theoreticalFrequency: 'k_2 · n log n',
+    frequencyExplanation: 'Copies right element into temp and increments pointers.',
     operationType: 'assignment',
-    baseCost: 1,
+    baseCost: 2,
+    complexityClass: 'O(N log N)',
   },
   {
     lineNumber: 13,
-    code: '    for (int p = 0; p < k; ++p) arr[left + p] = temp[p];',
+    code: '    }',
     costLabel: 'c13',
-    theoreticalFrequency: 'n log2(n)',
-    frequencyExplanation: 'Copy back buffer elements into original array. Exact sum across levels equals n * ceil(log2 n).',
-    operationType: 'assignment',
-    baseCost: 1,
+    theoreticalFrequency: 'n log n',
+    frequencyExplanation: 'End of main merge loop.',
+    operationType: 'none',
+    baseCost: 0,
+    complexityClass: 'O(N log N)',
   },
   {
     lineNumber: 14,
-    code: '}',
+    code: '    while (i <= mid)',
     costLabel: 'c14',
-    theoreticalFrequency: 'n - 1 calls',
-    frequencyExplanation: 'End merge.',
-    operationType: 'none',
-    baseCost: 0,
+    theoreticalFrequency: 'c · n log n',
+    frequencyExplanation: 'Flushes any remaining elements from left subarray.',
+    operationType: 'loop_control',
+    baseCost: 1,
+    complexityClass: 'O(N log N)',
   },
   {
     lineNumber: 15,
-    code: '',
+    code: '        temp[k++] = a[i++];',
     costLabel: 'c15',
-    theoreticalFrequency: '-',
-    frequencyExplanation: 'Divider',
-    operationType: 'none',
-    baseCost: 0,
+    theoreticalFrequency: 'c · n log n',
+    frequencyExplanation: 'Copies remaining left elements directly.',
+    operationType: 'assignment',
+    baseCost: 2,
+    complexityClass: 'O(N log N)',
   },
   {
     lineNumber: 16,
-    code: 'void mergeSort(std::vector<InstrumentedInt>& arr, int left, int right) {',
+    code: '    while (j <= high)',
     costLabel: 'c16',
-    theoreticalFrequency: '2n - 1 calls',
-    frequencyExplanation: 'Recursive entry: total recursive activations in binary recursion tree of size n is 2n - 1.',
-    operationType: 'recursion',
+    theoreticalFrequency: 'c · n log n',
+    frequencyExplanation: 'Flushes any remaining elements from right subarray.',
+    operationType: 'loop_control',
     baseCost: 1,
+    complexityClass: 'O(N log N)',
   },
   {
     lineNumber: 17,
-    code: '    if (left < right) {',
+    code: '        temp[k++] = a[j++];',
     costLabel: 'c17',
-    theoreticalFrequency: '2n - 1 calls',
-    frequencyExplanation: 'Base-case check (left < right). Evaluates false for all n leaves.',
-    operationType: 'comparison',
-    baseCost: 1,
+    theoreticalFrequency: 'c · n log n',
+    frequencyExplanation: 'Copies remaining right elements directly.',
+    operationType: 'assignment',
+    baseCost: 2,
+    complexityClass: 'O(N log N)',
   },
   {
     lineNumber: 18,
-    code: '        int mid = left + (right - left) / 2;',
+    code: '    for (int i = low; i <= high; i++)',
     costLabel: 'c18',
-    theoreticalFrequency: 'n - 1 calls',
-    frequencyExplanation: 'Overflow-safe midpoint computation.',
-    operationType: 'assignment',
+    theoreticalFrequency: 'n log n',
+    frequencyExplanation: 'Copies sorted elements from temp back into main array a[].',
+    operationType: 'loop_control',
     baseCost: 1,
+    complexityClass: 'O(N log N)',
   },
   {
     lineNumber: 19,
-    code: '        mergeSort(arr, left, mid);',
+    code: '        a[i] = temp[i];',
     costLabel: 'c19',
-    theoreticalFrequency: 'n - 1 calls',
-    frequencyExplanation: 'Recursive call on left half: T(ceil(n/2)).',
-    operationType: 'recursion',
+    theoreticalFrequency: 'n log n',
+    frequencyExplanation: 'Writes merged slice back into original array.',
+    operationType: 'assignment',
     baseCost: 1,
+    complexityClass: 'O(N log N)',
   },
   {
     lineNumber: 20,
-    code: '        mergeSort(arr, mid + 1, right);',
+    code: '}',
     costLabel: 'c20',
-    theoreticalFrequency: 'n - 1 calls',
-    frequencyExplanation: 'Recursive call on right half: T(floor(n/2)).',
-    operationType: 'recursion',
-    baseCost: 1,
+    theoreticalFrequency: 'n - 1',
+    frequencyExplanation: 'End of merge function.',
+    operationType: 'none',
+    baseCost: 0,
+    complexityClass: 'O(1)',
   },
   {
     lineNumber: 21,
-    code: '        merge(arr, left, mid, right);',
+    code: 'void mergeSort(int a[], int low, int high)',
     costLabel: 'c21',
-    theoreticalFrequency: 'n - 1 calls',
-    frequencyExplanation: 'Linear time merge subroutine: O(n) work per level.',
-    operationType: 'recursion',
+    theoreticalFrequency: '2n - 1',
+    frequencyExplanation: 'Recursive divide-and-conquer function entry.',
+    operationType: 'declaration',
     baseCost: 1,
+    complexityClass: 'O(log N)',
   },
   {
     lineNumber: 22,
-    code: '    }',
+    code: '{',
     costLabel: 'c22',
     theoreticalFrequency: '2n - 1',
-    frequencyExplanation: 'End if.',
+    frequencyExplanation: 'Block start.',
     operationType: 'none',
     baseCost: 0,
+    complexityClass: 'O(1)',
   },
   {
     lineNumber: 23,
-    code: '}',
+    code: '    if (low < high)',
     costLabel: 'c23',
     theoreticalFrequency: '2n - 1',
-    frequencyExplanation: 'Return from mergeSort activation.',
+    frequencyExplanation: 'Base case recursion test.',
+    operationType: 'comparison',
+    baseCost: 1,
+    complexityClass: 'O(log N)',
+    simpleExplanation: 'Checks if subarray has 2 or more elements.',
+  },
+  {
+    lineNumber: 24,
+    code: '    {',
+    costLabel: 'c24',
+    theoreticalFrequency: 'n - 1',
+    frequencyExplanation: 'Divide block start.',
+    operationType: 'none',
+    baseCost: 0,
+    complexityClass: 'O(1)',
+  },
+  {
+    lineNumber: 25,
+    code: '        int mid = (low + high) / 2;',
+    costLabel: 'c25',
+    theoreticalFrequency: 'n - 1',
+    frequencyExplanation: 'Calculates midpoint to divide array into two equal halves.',
+    operationType: 'assignment',
+    baseCost: 1,
+    complexityClass: 'O(1)',
+  },
+  {
+    lineNumber: 26,
+    code: '        mergeSort(a, low, mid);',
+    costLabel: 'c26',
+    theoreticalFrequency: 'n - 1',
+    frequencyExplanation: 'Recursive call to sort left half.',
+    operationType: 'recursion',
+    baseCost: 1,
+    complexityClass: 'O(log N)',
+  },
+  {
+    lineNumber: 27,
+    code: '        mergeSort(a, mid + 1, high);',
+    costLabel: 'c27',
+    theoreticalFrequency: 'n - 1',
+    frequencyExplanation: 'Recursive call to sort right half.',
+    operationType: 'recursion',
+    baseCost: 1,
+    complexityClass: 'O(log N)',
+  },
+  {
+    lineNumber: 28,
+    code: '        merge(a, low, mid, high);',
+    costLabel: 'c28',
+    theoreticalFrequency: 'n - 1',
+    frequencyExplanation: 'Merges the two sorted halves in linear O(k) time.',
+    operationType: 'recursion',
+    baseCost: 1,
+    complexityClass: 'O(N log N)',
+  },
+  {
+    lineNumber: 29,
+    code: '    }',
+    costLabel: 'c29',
+    theoreticalFrequency: 'n - 1',
+    frequencyExplanation: 'End of conditional block.',
+    operationType: 'none',
+    baseCost: 0,
+    complexityClass: 'O(1)',
+  },
+  {
+    lineNumber: 30,
+    code: '}',
+    costLabel: 'c30',
+    theoreticalFrequency: '2n - 1',
+    frequencyExplanation: 'Function return.',
     operationType: 'return',
     baseCost: 1,
+    complexityClass: 'O(1)',
   },
 ];
 
@@ -246,8 +355,8 @@ export const mergeSortDefinition: AlgorithmDefinition = {
   id: 'merge-sort',
   name: 'Merge Sort',
   category: 'sorting',
-  shortDescription: 'Divide-and-conquer algorithm that divides input into halves, sorts recursively, and merges.',
-  fullDescription: 'Merge Sort splits the array recursively down to single-element subarrays, then merges adjacent sorted lists using a linear scan. Its performance is strictly Θ(n log n) across all cases, providing predictable, stable sorting at the cost of O(n) auxiliary memory.',
+  shortDescription: 'Divide-and-conquer algorithm that recursively divides array in half, sorts each half, and merges them.',
+  fullDescription: 'Merge Sort repeatedly splits the array into two halves until single-element arrays are reached, then merges the sorted halves in linear time. It provides a guaranteed O(n log n) runtime across all input distributions.',
   requiresSorted: false,
   cppCode,
   lines,
@@ -259,13 +368,13 @@ export const mergeSortDefinition: AlgorithmDefinition = {
     comparisonsFormula: {
       best: '0.5 n log₂ n',
       worst: 'n log₂ n - n + 1',
-      average: 'n log₂ n - 0.9 n',
+      average: 'n log₂ n - 1.158 n',
       calculate: (n: number) => {
-        const log2n = Math.log2(n);
+        const log2n = Math.log2(n || 1);
         const worst = Math.round(n * log2n - n + 1);
         const best = Math.round(0.5 * n * log2n);
-        const avg = Math.round(n * log2n - 0.9 * n);
-        return { best, worst, avg };
+        const avg = Math.round(n * log2n - 1.158 * n);
+        return { best: Math.max(1, best), worst: Math.max(1, worst), avg: Math.max(1, avg) };
       },
     },
     assignmentsFormula: {
@@ -273,7 +382,7 @@ export const mergeSortDefinition: AlgorithmDefinition = {
       worst: '2 n log₂ n',
       average: '2 n log₂ n',
       calculate: (n: number) => {
-        const val = Math.round(2 * n * Math.log2(n));
+        const val = Math.round(2 * n * Math.log2(n || 1));
         return { best: val, worst: val, avg: val };
       },
     },
@@ -281,28 +390,32 @@ export const mergeSortDefinition: AlgorithmDefinition = {
   derivations: [
     {
       title: '1. Divide-and-Conquer Recurrence Relation',
-      formula: 'T(n) = 2T(n/2) + c \\cdot n, \\quad T(1) = \\Theta(1)',
-      explanation: 'Two recursive calls of size n/2 plus linear work Theta(n) to merge the two sorted halves back into array.',
+      formula: 'T(n) = 2 T(n/2) + \\Theta(n)',
+      explanation: 'Dividing into two halves of size n/2 requires 2 subproblems, and merging takes linear Θ(n) work.',
     },
     {
-      title: '2. Master Theorem (Case 2)',
-      formula: 'a = 2, b = 2, f(n) = \\Theta(n^1) \\implies n^{\\log_b a} = n^{\\log_2 2} = n^1 \\implies T(n) = \\Theta(n \\log n)',
-      explanation: 'Since f(n) matches n^(log_b a), Case 2 of the Master Theorem applies, confirming strictly Theta(n log n).',
-    },
-    {
-      title: '3. Recursion Tree Depth and Operation Tally',
-      formula: '\\text{Depth} = \\log_2 n, \\quad \\text{Cost per level} = c \\cdot n \\implies \\text{Total Cost} = c \\cdot n \\log_2 n',
-      explanation: 'Each level of the binary tree does exactly n merge operations. With log2(n) levels, the total comparison and copy workload scales as n log2(n).',
+      title: '2. Master Theorem Solution (Case 2)',
+      formula: 'a = 2, b = 2 \\implies n^{\\log_b a} = n^{\\log_2 2} = n^1 = f(n) \\implies T(n) = \\Theta(n \\log n)',
+      explanation: 'Since the subproblem cost matches the merge cost, total work across all log₂(n) tree levels is strictly Θ(n log n).',
     },
   ],
+  intuitiveGuide: {
+    shape: 'tree',
+    plainEnglishSummary: 'Splits the array into two equal halves repeatedly until each piece has 1 number, then merges them back together in order.',
+    scalingRule: 'If you double the array size from 10 to 20, operations increase by only about 2.3x (much faster than quadratic sorts).',
+    threeStepBreakdown: {
+      step1Loops: 'Height of recursion tree is log₂(n) levels. Each level merges n total items.',
+      step2Counts: 'Total comparisons at each level ≤ n. Total over log₂(n) levels = n log₂(n).',
+      step3BigO: 'Guaranteed O(n log n) in all cases, best, average, and worst.',
+    },
+  },
   generateSteps: (initialArray: number[]): StepState[] => {
     const steps: StepState[] = [];
-    const arr = [...initialArray];
-    const n = arr.length;
+    const a = [...initialArray];
+    const n = a.length;
     let comparisons = 0;
     let assignments = 0;
     const lineHits: { [line: number]: number } = {};
-    const callStack: string[] = [];
 
     const record = (
       line: number,
@@ -312,199 +425,222 @@ export const mergeSortDefinition: AlgorithmDefinition = {
       sorted: number[],
       msg: string,
       expr?: string,
-      result?: string
+      res?: string
     ) => {
       lineHits[line] = (lineHits[line] || 0) + 1;
       steps.push({
         stepIndex: steps.length,
         lineNumber: line,
-        array: [...arr],
-        indices: { ...indices },
-        comparingIndices: [...comparing],
-        swappingIndices: [...swapping],
-        sortedIndices: [...sorted],
-        callStack: [...callStack],
+        array: [...a],
+        indices,
+        comparingIndices: comparing,
+        swappingIndices: swapping,
+        sortedIndices: sorted,
         comparisons,
         assignments,
         lineHits: { ...lineHits },
         message: msg,
         highlightExpression: expr,
-        expressionResult: result,
+        expressionResult: res,
       });
     };
 
-    function merge(left: number, mid: number, right: number) {
-      callStack.push(`merge(left=${left}, mid=${mid}, right=${right})`);
-      record(1, { left, mid, right }, [], [], [], `Entering merge(arr, ${left}, ${mid}, ${right})`);
+    const temp = new Array(Math.max(50, n)).fill(0);
 
-      const temp: number[] = new Array(right - left + 1);
-      assignments += temp.length;
-      record(2, { left, mid, right }, [], [], [], `Allocated temporary buffer of size ${temp.length}`);
+    const merge = (low: number, mid: number, high: number) => {
+      record(1, { low, mid, high }, [], [], [], `merge(a, low = ${low}, mid = ${mid}, high = ${high})`);
+      record(3, { low, mid, high }, [], [], [], `Allocated temp array`);
 
-      let i = left;
+      let i = low;
       let j = mid + 1;
-      let k = 0;
+      let k = low;
       assignments += 3;
-      record(3, { left, mid, right, i, j, k }, [], [], [], `Initialized i = ${i}, j = ${j}, k = ${k}`);
+      record(4, { low, mid, high, i }, [], [], [], `i = ${low}`);
+      record(5, { low, mid, high, i, j }, [], [], [], `j = ${mid + 1}`);
+      record(6, { low, mid, high, i, j, k }, [], [], [], `k = ${low}`);
 
-      while (i <= mid && j <= right) {
-        comparisons += 1;
-        const takeLeft = arr[i] <= arr[j];
-        record(
-          5,
-          { left, mid, right, i, j, k },
-          [i, j],
-          [],
-          [],
-          `Comparing arr[${i}] (${arr[i]}) <= arr[${j}] (${arr[j]}) -> ${takeLeft ? 'Take left' : 'Take right'}`,
-          `arr[${i}] <= arr[${j}]`,
-          `${arr[i]} <= ${arr[j]} -> ${takeLeft}`
-        );
+      while (i <= mid && j <= high) {
+        comparisons++;
+        const cmpExpr = `a[${i}] <= a[${j}]`;
+        const condition = a[i] <= a[j];
+        const cmpRes = `${a[i]} <= ${a[j]} -> ${condition}`;
 
-        if (takeLeft) {
-          temp[k++] = arr[i++];
-          assignments += 1;
-          record(6, { left, mid, right, i, j, k }, [], [], [], `Copied left element ${temp[k - 1]} to temp[${k - 1}]`);
+        record(9, { low, mid, high, i, j, k }, [i, j], [], [], `Comparing a[${i}] (${a[i]}) <= a[${j}] (${a[j]})`, cmpExpr, cmpRes);
+
+        if (condition) {
+          temp[k++] = a[i++];
+          assignments += 2;
+          record(10, { low, mid, high, i, j, k }, [], [i - 1], [], `temp[${k - 1}] = a[${i - 1}] (${temp[k - 1]}) from left`);
         } else {
-          temp[k++] = arr[j++];
-          assignments += 1;
-          record(8, { left, mid, right, i, j, k }, [], [], [], `Copied right element ${temp[k - 1]} to temp[${k - 1}]`);
+          temp[k++] = a[j++];
+          assignments += 2;
+          record(12, { low, mid, high, i, j, k }, [], [j - 1], [], `temp[${k - 1}] = a[${j - 1}] (${temp[k - 1]}) from right`);
         }
       }
 
       while (i <= mid) {
-        temp[k++] = arr[i++];
-        assignments += 1;
-        record(11, { left, mid, right, i, k }, [], [], [], `Drained remaining left element into temp`);
+        temp[k++] = a[i++];
+        assignments += 2;
+        record(15, { low, mid, high, i, j, k }, [], [i - 1], [], `Copying remaining left item a[${i - 1}] to temp[${k - 1}]`);
       }
 
-      while (j <= right) {
-        temp[k++] = arr[j++];
-        assignments += 1;
-        record(12, { left, mid, right, j, k }, [], [], [], `Drained remaining right element into temp`);
+      while (j <= high) {
+        temp[k++] = a[j++];
+        assignments += 2;
+        record(17, { low, mid, high, i, j, k }, [], [j - 1], [], `Copying remaining right item a[${j - 1}] to temp[${k - 1}]`);
       }
 
-      for (let p = 0; p < k; ++p) {
-        arr[left + p] = temp[p];
-        assignments += 1;
-        record(
-          13,
-          { left, right, p, dest: left + p },
-          [],
-          [left + p],
-          [],
-          `Copied buffer temp[${p}] (${temp[p]}) back into arr[${left + p}]`
-        );
+      for (let idx = low; idx <= high; idx++) {
+        a[idx] = temp[idx];
+        assignments++;
+        record(19, { low, mid, high, i: idx }, [], [idx], [], `a[${idx}] = temp[${idx}] (${a[idx]}), writing back merged element`);
       }
+    };
 
-      record(14, { left, right }, [], [], [], `Merged subsegment [${left}..${right}]`);
-      callStack.pop();
-    }
+    const mergeSort = (low: number, high: number) => {
+      record(21, { low, high }, [], [], [], `mergeSort(a, low = ${low}, high = ${high})`);
+      record(23, { low, high }, [], [], [], `Checking low < high (${low} < ${high} -> ${low < high})`);
 
-    function sort(left: number, right: number) {
-      callStack.push(`mergeSort(left=${left}, right=${right})`);
-      record(16, { left, right }, [], [], [], `mergeSort(arr, ${left}, ${right})`);
+      if (low < high) {
+        const mid = Math.floor((low + high) / 2);
+        assignments++;
+        record(25, { low, mid, high }, [], [], [], `mid = (${low} + ${high}) / 2 = ${mid}`);
 
-      comparisons += 1; // if (left < right)
-      record(17, { left, right }, [], [], [], `Check if left (${left}) < right (${right}) -> ${left < right}`);
-
-      if (left < right) {
-        const mid = left + Math.floor((right - left) / 2);
-        assignments += 1;
-        record(18, { left, right, mid }, [], [], [], `Computed mid = ${mid}`);
-
-        record(19, { left, mid }, [], [], [], `Recursing left: mergeSort(${left}, ${mid})`);
-        sort(left, mid);
-
-        record(20, { 'mid+1': mid + 1, right }, [], [], [], `Recursing right: mergeSort(${mid + 1}, ${right})`);
-        sort(mid + 1, right);
-
-        record(21, { left, mid, right }, [], [], [], `Calling merge(${left}, ${mid}, ${right})`);
-        merge(left, mid, right);
+        mergeSort(low, mid);
+        mergeSort(mid + 1, high);
+        merge(low, mid, high);
       }
+    };
 
-      callStack.pop();
-    }
-
-    sort(0, n - 1);
-    record(23, {}, [], [], Array.from({ length: n }, (_, idx) => idx), `Merge Sort finished! Comparisons: ${comparisons}, Assignments: ${assignments}`);
+    mergeSort(0, n - 1);
+    record(30, {}, [], [], Array.from({ length: n }, (_, idx) => idx), `Merge sort complete. Total comparisons: ${comparisons}`);
 
     return steps;
   },
-
   runBenchmark: (sizes: number[], distribution: InputDistribution): BenchmarkPoint[] => {
     return sizes.map((n) => {
       const arr = generateArray(n, distribution);
       let comparisons = 0;
       let assignments = 0;
+      const temp = new Array(Math.max(50, n)).fill(0);
 
-      function benchMerge(l: number, m: number, r: number) {
-        const temp: number[] = new Array(r - l + 1);
-        assignments += temp.length;
-        let i = l, j = m + 1, k = 0;
-        assignments += 3;
-        while (i <= m && j <= r) {
+      const merge = (low: number, mid: number, high: number) => {
+        let i = low;
+        let j = mid + 1;
+        let k = low;
+        while (i <= mid && j <= high) {
           comparisons++;
           if (arr[i] <= arr[j]) {
             temp[k++] = arr[i++];
-            assignments++;
           } else {
             temp[k++] = arr[j++];
-            assignments++;
           }
+          assignments += 2;
         }
-        while (i <= m) {
+        while (i <= mid) {
           temp[k++] = arr[i++];
-          assignments++;
+          assignments += 2;
         }
-        while (j <= r) {
+        while (j <= high) {
           temp[k++] = arr[j++];
+          assignments += 2;
+        }
+        for (let idx = low; idx <= high; idx++) {
+          arr[idx] = temp[idx];
           assignments++;
         }
-        for (let p = 0; p < k; ++p) {
-          arr[l + p] = temp[p];
-          assignments++;
+      };
+
+      const sort = (low: number, high: number) => {
+        if (low < high) {
+          const mid = Math.floor((low + high) / 2);
+          sort(low, mid);
+          sort(mid + 1, high);
+          merge(low, mid, high);
         }
-      }
+      };
 
-      function benchSort(l: number, r: number) {
-        comparisons++;
-        if (l < r) {
-          const m = l + Math.floor((r - l) / 2);
-          assignments++;
-          benchSort(l, m);
-          benchSort(m + 1, r);
-          benchMerge(l, m, r);
-        }
-      }
+      sort(0, n - 1);
 
-      benchSort(0, n - 1);
-
-      const log2n = Math.log2(n);
-      const theoreticalWorst = Math.round(n * log2n + 2 * n * log2n);
-      const theoreticalBest = Math.round(0.5 * n * log2n + 2 * n * log2n);
-      const theoreticalAvg = (theoreticalWorst + theoreticalBest) / 2;
+      const log2n = Math.log2(n || 1);
+      const theoretical = Math.round(n * log2n);
 
       return {
         n,
         observedComparisons: comparisons,
         observedAssignments: assignments,
-        totalOperations: comparisons + assignments,
-        theoreticalWorst,
-        theoreticalAvg,
-        theoreticalBest,
+        totalOperations: comparisons,
+        theoreticalWorst: theoretical,
+        theoreticalAvg: theoretical,
+        theoreticalBest: Math.round(0.5 * theoretical),
       };
     });
   },
+  getStandaloneCpp: (arraySize: number, distribution: InputDistribution): string => {
+    const sampleArr = generateArray(arraySize, distribution);
+    return `#include <iostream>
+using namespace std;
 
-  getStandaloneCpp: (arraySize: number, distribution: InputDistribution) => {
-    return generateStandaloneCpp(
-      'Merge Sort',
-      cppCode,
-      'mergeSort(arr, 0, arr.size() - 1);',
-      false,
-      arraySize,
-      distribution
-    );
+void merge(int a[], int low, int mid, int high)
+{
+    int temp[50];
+    int i = low;
+    int j = mid + 1;
+    int k = low;
+
+    while (i <= mid && j <= high)
+    {
+        if (a[i] <= a[j])
+            temp[k++] = a[i++];
+        else
+            temp[k++] = a[j++];
+    }
+
+    while (i <= mid)
+        temp[k++] = a[i++];
+
+    while (j <= high)
+        temp[k++] = a[j++];
+
+    for (int i = low; i <= high; i++)
+        a[i] = temp[i];
+}
+
+void mergeSort(int a[], int low, int high)
+{
+    if (low < high)
+    {
+        int mid = (low + high) / 2;
+
+        mergeSort(a, low, mid);
+        mergeSort(a, mid + 1, high);
+
+        merge(a, low, mid, high);
+    }
+}
+
+int main()
+{
+    int a[50], n;
+
+    // Default sample input initialized for demonstration:
+    n = ${Math.min(arraySize, 50)};
+    int sampleData[] = {${sampleArr.slice(0, 50).join(', ')}};
+    for (int i = 0; i < n; i++) a[i] = sampleData[i];
+
+    cout << "Original array: ";
+    for (int i = 0; i < n; i++)
+        cout << a[i] << " ";
+    cout << "\\n";
+
+    mergeSort(a, 0, n - 1);
+
+    cout << "Sorted array: ";
+    for (int i = 0; i < n; i++)
+        cout << a[i] << " ";
+    cout << "\\n";
+
+    return 0;
+}`;
   },
 };

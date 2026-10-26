@@ -6,6 +6,7 @@ import {
   getPlainEnglishLineExplanation,
 } from '../utils/complexityUtils';
 import { ComplexityShapeDiagram } from './ComplexityShapeDiagram';
+import { LineByLineCostTable } from './LineByLineCostTable';
 import {
   Sparkles,
   BookOpen,
@@ -241,76 +242,14 @@ export const LineComplexityTable: React.FC<LineComplexityTableProps> = ({
         </div>
       </div>
 
-      {/* 4. LINE-BY-LINE TABLE */}
-      <div className="bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 bg-slate-50 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800">
-          <div className="flex items-center gap-2">
-            <Layers className="w-4 h-4 text-sky-600 dark:text-sky-400" />
-            <h4 className="text-xs font-bold text-slate-900 dark:text-white tracking-wide uppercase">
-              Line-by-Line Execution Frequency Table
-            </h4>
-          </div>
-          <span className="text-xs text-slate-500 dark:text-slate-400">
-            Click any row to inspect its calculation
-          </span>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-slate-600 dark:text-slate-400 font-mono text-[11px]">
-                <th className="py-2.5 px-3 w-12 text-center">Line</th>
-                <th className="py-2.5 px-3">C++ Code Statement</th>
-                <th className="py-2.5 px-3 w-32">Frequency Class</th>
-                <th className="py-2.5 px-3 w-36">Theoretical f(n)</th>
-                <th className="py-2.5 px-3 w-28 text-right">Hits (N={arraySize})</th>
-                <th className="py-2.5 px-3 w-28">Type</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-900/80 font-mono">
-              {algorithm.lines.map((line) => {
-                const hits = lineHits[line.lineNumber] || 0;
-                const isSelected = line.lineNumber === activeInspectLineNumber;
-                const cls = inferLineComplexityClass(line, algorithm);
-                const clsInfo = getComplexityClassInfo(cls);
-
-                return (
-                  <tr
-                    key={line.lineNumber}
-                    onClick={() => setSelectedLine(line.lineNumber)}
-                    className={`cursor-pointer transition-colors ${
-                      isSelected
-                        ? 'bg-sky-50 dark:bg-sky-950/40 text-sky-900 dark:text-sky-200 font-medium'
-                        : 'hover:bg-slate-50 dark:hover:bg-slate-900/40 text-slate-700 dark:text-slate-300'
-                    }`}
-                  >
-                    <td className="py-2 px-3 text-center text-slate-400 dark:text-slate-500 tabular-nums">
-                      {line.lineNumber}
-                    </td>
-                    <td className="py-2 px-3 truncate max-w-[280px] font-mono text-[11.5px]">
-                      {line.code}
-                    </td>
-                    <td className="py-2 px-3">
-                      <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold ${clsInfo.badgeBg} ${clsInfo.badgeBorder} ${clsInfo.badgeText} border`}>
-                        {clsInfo.label.split(' ')[0]}
-                      </span>
-                    </td>
-                    <td className="py-2 px-3 text-amber-600 dark:text-amber-300 text-[11px]">
-                      {line.theoreticalFrequency}
-                    </td>
-                    <td className="py-2 px-3 text-right text-sky-600 dark:text-sky-300 font-semibold tabular-nums">
-                      {hits}×
-                    </td>
-                    <td className="py-2 px-3 text-slate-500 dark:text-slate-400 capitalize text-[11px]">
-                      {line.operationType.replace('_', ' ')}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      {/* 4. LINE-BY-LINE TABLE: COST, REPETITION, TOTAL TIME */}
+      <LineByLineCostTable
+        algorithm={algorithm}
+        currentStep={currentStep}
+        selectedLine={selectedLine}
+        setSelectedLine={setSelectedLine}
+        arraySize={arraySize}
+      />
 
       {/* 5. FORMAL MATHEMATICAL DERIVATIONS */}
       {viewMode === 'math' && (
