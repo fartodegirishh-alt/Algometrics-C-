@@ -3,11 +3,8 @@ import { binarySearchDefinition } from './binarySearch';
 import { bubbleSortDefinition } from './bubbleSort';
 import { heapSortDefinition } from './heapSort';
 import { insertionSortDefinition } from './insertionSort';
-import { interpolationSearchDefinition } from './interpolationSearch';
-import { jumpSearchDefinition } from './jumpSearch';
 import { linearSearchDefinition } from './linearSearch';
 import { mergeSortDefinition } from './mergeSort';
-import { quickSortDefinition } from './quickSort';
 import { selectionSortDefinition } from './selectionSort';
 
 export const ALGORITHMS: AlgorithmDefinition[] = [
@@ -15,12 +12,9 @@ export const ALGORITHMS: AlgorithmDefinition[] = [
   selectionSortDefinition,
   insertionSortDefinition,
   mergeSortDefinition,
-  quickSortDefinition,
   heapSortDefinition,
   linearSearchDefinition,
   binarySearchDefinition,
-  jumpSearchDefinition,
-  interpolationSearchDefinition,
 ];
 
 export function getAlgorithmById(id: string): AlgorithmDefinition {
